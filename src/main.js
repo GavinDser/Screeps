@@ -65,7 +65,7 @@ export const loop = errorMapper(() => {
 
     //this.spawnCreep(body,name,{memory: {role: roleName}});
 
-    if(harvesters.length < 1) {
+    if(harvesters.length < 2) {
         let energyUsing = undefined;
         if (crossSourceHarvesters.length == 0 && harvesters.length == 0){
             energyUsing = energyAvaliable;
