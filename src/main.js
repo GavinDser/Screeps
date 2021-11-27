@@ -12,8 +12,6 @@
 
 
 
-
-
 import { errorMapper } from './modules/errorMapper'
 import { Harvester as harvester } from './modules/Creep/Harvester'
 import { HarvestCreep as harvestCreep } from './modules/Creep/HarvestCreep'
@@ -42,7 +40,7 @@ export const loop = errorMapper(() => {
         }
     }
 
-
+    blahblahblah
     //spawn creep harvester
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     // var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
