@@ -40,7 +40,6 @@ export const loop = errorMapper(() => {
         }
     }
 
-    blahblahblah
     //spawn creep harvester
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     // var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
