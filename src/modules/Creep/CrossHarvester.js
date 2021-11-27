@@ -19,7 +19,7 @@ export const CrossHarvester = {
                 var findSource = function(){
                     var source = creep.room.find(FIND_STRUCTURES, {
                     filter: (s) => {
-                        return s.structureType == STRUCTURE_TOWER && s.store[RESOURCE_ENERGY] > 0
+                        return s.structureType == STRUCTURE_TOWER || s.structureType == STRUCTURE_EXTENSION && s.store[RESOURCE_ENERGY] > 0
                     }
                     //s.structureType == STRUCTURE_EXTENSION
     

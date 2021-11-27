@@ -3451,12 +3451,12 @@ const Repairer$1 = {
             }
     } 
     else {
-        if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-                creep.moveTo(creep.room.storage);
-            }
-        //   if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-        //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
-        //   }
+        // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+        //         creep.moveTo(creep.room.storage)
+        //     }
+          if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+              creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+          }
     }
 }
 };
@@ -3542,12 +3542,12 @@ const Repairer = {
             }
     } 
     else {
-        if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-                creep.moveTo(creep.room.storage);
-            }
-        //   if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-        //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
-        //   }
+        // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+        //         creep.moveTo(creep.room.storage)
+        //     }
+          if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+              creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+          }
     }
 }
 };
@@ -3570,7 +3570,7 @@ const CrossHarvester = {
                 var findSource = function(){
                     var source = creep.room.find(FIND_STRUCTURES, {
                     filter: (s) => {
-                        return s.structureType == STRUCTURE_TOWER && s.store[RESOURCE_ENERGY] > 0
+                        return s.structureType == STRUCTURE_TOWER || s.structureType == STRUCTURE_EXTENSION && s.store[RESOURCE_ENERGY] > 0
                     }
                     //s.structureType == STRUCTURE_EXTENSION
     
@@ -3782,13 +3782,13 @@ const WallRepairer = {
 
     }
     else {
-            if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-                creep.moveTo(creep.room.storage);
-            }
+            // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+            //     creep.moveTo(creep.room.storage)
+            // }
 
-        //   if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-        //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
-        //   }
+          if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+              creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+          }
 
     }
 }
@@ -3999,7 +3999,7 @@ const loop = errorMapper(() => {
 
     //this.spawnCreep(body,name,{memory: {role: roleName}});
 
-    if(harvesters.length < 2) {
+    if(harvesters.length < 1) {
         let energyUsing = undefined;
         if (crossSourceHarvesters.length == 0 && harvesters.length == 0){
             energyUsing = energyAvaliable;
