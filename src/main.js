@@ -13,6 +13,7 @@
 
 
 import { errorMapper } from './modules/errorMapper'
+
 import { Harvester as harvester } from './modules/Creep/Harvester'
 import { HarvestCreep as harvestCreep } from './modules/Creep/HarvestCreep'
 import { Upgrader as upgrader } from './modules/creep/Upgrader'
@@ -21,6 +22,9 @@ import { Repairer as repairer } from './modules/creep/Repairer'
 import { CrossHarvester as crossHarvester } from './modules/Creep/CrossHarvester'
 import { CrossSourceHarvester as crossSourceHarvester } from './modules/Creep/CrossSourceHarvester'
 import { WallRepairer as wallRepairer } from './modules/creep/WallRepairer'
+
+
+import "./modules/utils/Talk"
 import { RandomName as randomName } from './modules/RandomName/RandomName'
 import { random } from 'lodash'
 import { Body as bodyType } from './modules/utils/Body'
@@ -40,7 +44,7 @@ export const loop = errorMapper(() => {
         }
     }
 
-    //spawn creep harvester
+    //spawn creep
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     // var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
@@ -80,12 +84,12 @@ export const loop = errorMapper(() => {
     }else if(repairers.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"Repairer_"+randomName.createName(),
         {memory: {role: "repairer"}});
-    // }else if(builders.length < 1){
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"Builder_"+randomName.createName(),
-    //     {memory:{ role: "builder", target: 0}});
-    }else if(wallRepairers.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"WallRepairer_"+randomName.createName(),
-        {memory: {role: "wallRepairer", target: ""}})
+    }else if(builders.length < 1){
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"Builder_"+randomName.createName(),
+        {memory:{ role: "builder", target: 0}});
+    // }else if(wallRepairers.length < 1){
+    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"WallRepairer_"+randomName.createName(),
+    //     {memory: {role: "wallRepairer", target: ""}})
     
     }else if(crossSourceHarvesters.length < 2){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.2,energyMax),"CrossSourceHarvester_"+crossSourceHarvesters.length,
@@ -150,6 +154,13 @@ export const loop = errorMapper(() => {
 
 
 
+    }
+
+    //奇怪的东西
+    TalkAll();
+
+    if(Game.cpu.bucket == 10000){
+        Game.cpu.generatePixel()
     }
 
 

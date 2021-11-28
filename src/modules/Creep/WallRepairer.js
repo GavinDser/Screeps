@@ -14,11 +14,9 @@ export const WallRepairer = {
 
     if(creep.memory.repairing && creep.store[RESOURCE_ENERGY] == 0) {
           creep.memory.repairing = false;
-          creep.say('harvest!');
     }
     if(!creep.memory.repairing && creep.store.getFreeCapacity() == 0) {
         creep.memory.repairing = true;
-        creep.say('Repair!');
     }
 
     if(creep.memory.repairing) {
@@ -26,7 +24,7 @@ export const WallRepairer = {
 
         var ramparts = creep.room.find(FIND_STRUCTURES, {
             filter: (s) => 
-                s.structureType ==  STRUCTURE_RAMPART && (s.hits/s.hitsMax) < 0.8
+                s.structureType ==  STRUCTURE_RAMPART && (s.hits/s.hitsMax) < 0.6
             
         });
         var findRampart = function(){
@@ -37,7 +35,7 @@ export const WallRepairer = {
             if (creep.memory.target == '' || creep.memory.target == undefined || creep.memory.target.structureType != STRUCTURE_RAMPART){
                 creep.memory.target = findRampart();     
             }
-            else if (creep.memory.target != undefined && creep.memory.target.hits < creep.memory.target.hitsMax){
+            else if (creep.memory.target != undefined && creep.memory.target.hits/creep.memory.target.hitsMax < 0.6){
                 if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                 }
@@ -49,7 +47,7 @@ export const WallRepairer = {
         else{     
             var walls = creep.room.find(FIND_STRUCTURES, {
                 filter: (s) => {
-                  return (s.structureType == STRUCTURE_WALL)
+                  return (s.structureType == STRUCTURE_WALL && s.hits/s.hitsMax < 0.3)
                           
                 } });
 
@@ -63,7 +61,7 @@ export const WallRepairer = {
                     upgrader.run(creep)
                 }
             }
-            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.8){
+            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.3){
                     if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                     }
