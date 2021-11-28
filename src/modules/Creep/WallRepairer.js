@@ -61,7 +61,7 @@ export const WallRepairer = {
                     upgrader.run(creep)
                 }
             }
-            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.3){
+            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.2){
                     if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                     }

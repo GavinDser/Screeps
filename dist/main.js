@@ -3468,7 +3468,7 @@ const WallRepairer$1 = {
                     Upgrader$1.run(creep);
                 }
             }
-            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.3){
+            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.2){
                     if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                     }
@@ -3791,7 +3791,7 @@ const WallRepairer = {
                     Upgrader$1.run(creep);
                 }
             }
-            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.3){
+            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.2){
                     if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                     }
@@ -4088,26 +4088,31 @@ const loop = errorMapper(() => {
     // }else if(harvestCreeps.length < 2){
     //      Game.spawns['Spawn1'].createSoloCreep('work',energyMax,'harvestCreep',"HarvestCreep_"+harvestCreeps.length,'E35S47','E36S47');
     }else if(upgraders.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1300),"Upgrader_"+RandomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200),"Upgrader_"+RandomName.createName(),
         {memory: {role: "upgrader"}});
     }else if(repairers.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1300),"Repairer_"+RandomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200),"Repairer_"+RandomName.createName(),
         {memory: {role: "repairer"}});
-    }else if(builders.length < 2){
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1300),"Builder_"+RandomName.createName(),
+    }else if(builders.length < 1){
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200),"Builder_"+RandomName.createName(),
         {memory:{ role: "builder", target: 0}});
-    // }else if(wallRepairers.length < 1){
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"WallRepairer_"+randomName.createName(),
-    //     {memory: {role: "wallRepairer", target: ""}})
+    }else if(wallRepairers.length < 1){
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200),"WallRepairer_"+RandomName.createName(),
+        {memory: {role: "wallRepairer", target: ""}});
     
-    }else if(crossSourceHarvesters.length < 2){
-        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.2,energyMax),"CrossSourceHarvester_"+crossSourceHarvesters.length,
-        {memory: {role: "crossSourceHarvester", home:'E35S47', target:'E36S47'}});
+    // }else if(crossSourceHarvesters.length < 2){
+    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_"+crossSourceHarvesters.length,
+    //     {memory: {role: "crossSourceHarvester", home:'E35S47', target:'E36S47'}});
     // }else if(crossHarvesters.length < 1) {
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createSoloBody('carry',energyMax),"CrossHarvester_"+randomName.createName(),
+    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createSoloBody('carry',1200),"CrossHarvester_"+randomName.createName(),
     //     {memory: {role:"crossHarvester", home:"E35S47", target:"E36S47"}});
+    }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_0")){
+        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_0",
+        {memory: {role: "crossSourceHarvester", home:'E35S47', target:'E36S47'}});       
+    }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_1")){
+        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_1",
+        {memory: {role: "crossSourceHarvester", home:'E35S47', target:'E36S47'}});       
     }
-
     //tower logic
 
     var towers = Game.spawns['Spawn1'].room.find(FIND_STRUCTURES, {
@@ -4154,10 +4159,10 @@ const loop = errorMapper(() => {
             CrossHarvester.run(creep);
         }
         //特殊处理
-        if (name == "CrossSourceHarvester_0"){
+        if (creep.name == "CrossSourceHarvester_0"){
             CrossSourceHarvester.run(creep,energy1);
         }
-        if (name == "CrossSourceHarvester_1"){
+        if (creep.name == "CrossSourceHarvester_1"){
             CrossSourceHarvester.run(creep,energy2);
         }
 
