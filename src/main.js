@@ -72,20 +72,20 @@ export const loop = errorMapper(() => {
             energyUsing = energyAvaliable;
         }
         else{
-            energyUsing = energyMax;
+            energyUsing = 1300;
         }
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyUsing),"Harvester_"+randomName.createName(),
         {memory: {role: "harvester"}});
     // }else if(harvestCreeps.length < 2){
     //      Game.spawns['Spawn1'].createSoloCreep('work',energyMax,'harvestCreep',"HarvestCreep_"+harvestCreeps.length,'E35S47','E36S47');
     }else if(upgraders.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"Upgrader_"+randomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1300),"Upgrader_"+randomName.createName(),
         {memory: {role: "upgrader"}});
     }else if(repairers.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"Repairer_"+randomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1300),"Repairer_"+randomName.createName(),
         {memory: {role: "repairer"}});
-    }else if(builders.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"Builder_"+randomName.createName(),
+    }else if(builders.length < 2){
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1300),"Builder_"+randomName.createName(),
         {memory:{ role: "builder", target: 0}});
     // }else if(wallRepairers.length < 1){
     //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"WallRepairer_"+randomName.createName(),

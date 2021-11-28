@@ -3277,13 +3277,13 @@ const Upgrader$1 = {
             }
         }
         else {
-            if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-                creep.moveTo(creep.room.storage);
-            }
-
-            // if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-            //     creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+            // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+            //     creep.moveTo(creep.room.storage)
             // }
+
+            if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+            }
         }
 	}
 };
@@ -3395,13 +3395,13 @@ const Upgrader = {
             }
         }
         else {
-            if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-                creep.moveTo(creep.room.storage);
-            }
-
-            // if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-            //     creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+            // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+            //     creep.moveTo(creep.room.storage)
             // }
+
+            if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+            }
         }
 	}
 };
@@ -4081,20 +4081,20 @@ const loop = errorMapper(() => {
             energyUsing = energyAvaliable;
         }
         else {
-            energyUsing = energyMax;
+            energyUsing = 1300;
         }
         Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(energyUsing),"Harvester_"+RandomName.createName(),
         {memory: {role: "harvester"}});
     // }else if(harvestCreeps.length < 2){
     //      Game.spawns['Spawn1'].createSoloCreep('work',energyMax,'harvestCreep',"HarvestCreep_"+harvestCreeps.length,'E35S47','E36S47');
     }else if(upgraders.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(energyMax),"Upgrader_"+RandomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1300),"Upgrader_"+RandomName.createName(),
         {memory: {role: "upgrader"}});
     }else if(repairers.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(energyMax),"Repairer_"+RandomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1300),"Repairer_"+RandomName.createName(),
         {memory: {role: "repairer"}});
-    }else if(builders.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(energyMax),"Builder_"+RandomName.createName(),
+    }else if(builders.length < 2){
+        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1300),"Builder_"+RandomName.createName(),
         {memory:{ role: "builder", target: 0}});
     // }else if(wallRepairers.length < 1){
     //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyMax),"WallRepairer_"+randomName.createName(),
