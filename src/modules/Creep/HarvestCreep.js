@@ -1,14 +1,14 @@
 export const HarvestCreep ={
-    run: function(creep,source) {
-        if (creep.room.name != creep.memory.target){
-            let exit = creep.room.findExitTo(creep.memory.target);
-            creep.moveTo(creep.pos.findClosestByRange(exit));
+    run: function(creep) {
+        let source = Game.getObjectById(creep.memory.sourceId)
+        let container = source.pos.findInRange(FIND_STRUCTURES,1,{filter: {structureType: STRUCTURE_CONTAINER}})[0];
+
+        if (!creep.pos.isEqualTo(container.pos)){
+            creep.moveTo(container)
         }
         else{
-        
-            if (creep.harvest(source) == ERR_NOT_IN_RANGE){
-                creep.moveTo(source);
-            }
+            creep.harvest(source);
         }
+
     }
 }

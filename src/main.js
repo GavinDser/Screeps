@@ -46,7 +46,7 @@ export const loop = errorMapper(() => {
 
     //spawn creep
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
-    // var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
+    var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
     var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
@@ -76,8 +76,16 @@ export const loop = errorMapper(() => {
         }
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyUsing),"Harvester_"+randomName.createName(),
         {memory: {role: "harvester"}});
-    // }else if(harvestCreeps.length < 2){
-    //      Game.spawns['Spawn1'].createSoloCreep('work',energyMax,'harvestCreep',"HarvestCreep_"+harvestCreeps.length,'E35S47','E36S47');
+    
+
+    }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_0")){
+        Game.spawns['Spawn1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,MOVE], "HarvestCreep_0",
+        {memory: {role:"harvestCreep", sourceId:'5bbcaf069099fc012e639ff5'}});
+    }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_1")){
+        Game.spawns['Spawn1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,MOVE], "HarvestCreep_1",
+        {memory: {role:"harvestCreep", sourceId:'5bbcaf069099fc012e639ff6'}});
+    
+    
     }else if(upgraders.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Upgrader_"+randomName.createName(),
         {memory: {role: "upgrader"}});
@@ -91,9 +99,6 @@ export const loop = errorMapper(() => {
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"WallRepairer_"+randomName.createName(),
         {memory: {role: "wallRepairer", target: ""}})
     
-    // }else if(crossSourceHarvesters.length < 2){
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_"+crossSourceHarvesters.length,
-    //     {memory: {role: "crossSourceHarvester", home:'E35S47', target:'E36S47'}});
     // }else if(crossHarvesters.length < 1) {
     //     Game.spawns['Spawn1'].spawnCreep(bodyType.createSoloBody('carry',1200),"CrossHarvester_"+randomName.createName(),
     //     {memory: {role:"crossHarvester", home:"E35S47", target:"E36S47"}});
@@ -130,6 +135,9 @@ export const loop = errorMapper(() => {
         var creep = Game.creeps[name];
         if (creep.memory.role == 'harvester'){
             harvester.run(creep);
+        }
+        if (creep.memory.role == "harvestCreep"){
+            harvestCreep.run(creep);
         }
         if (creep.memory.role == "upgrader"){
             upgrader.run(creep);
