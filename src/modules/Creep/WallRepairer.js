@@ -28,7 +28,7 @@ export const WallRepairer = {
             
         });
         var findRampart = function(){
-            let rampart = _.sortBy(ramparts, (r)=> r.hits/r.hitsMax)
+            let rampart = _.sortBy(ramparts, (r)=> (r.hits/r.hitsMax))
             return rampart[0];
         }
         var newRampart = function(){
@@ -44,7 +44,7 @@ export const WallRepairer = {
                     creep.memory.target = findRampart();     
                 }
             }
-            else if (creep.memory.target != undefined && creep.memory.target.hits/creep.memory.target.hitsMax < 0.5){
+            else if (creep.memory.target != undefined && creep.memory.target.hits/creep.memory.target.hitsMax){
                 if (newRampart().length && creep.memory.target.id != newRampart()[0].id){
                     creep.memory.target = ''
                 }
@@ -95,7 +95,7 @@ export const WallRepairer = {
         //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
         //   }
         let sources = creep.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
         })
         let source = _.sortBy(sources, (s)=> s.store[RESOURCE_ENERGY]).reverse()
         if (source.length){

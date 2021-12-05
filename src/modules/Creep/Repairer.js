@@ -23,7 +23,7 @@ export const Repairer = {
     if(creep.memory.repairing) {
         var targets = creep.room.find(FIND_STRUCTURES, {
             filter: (s) => 
-                s.structureType !=  STRUCTURE_WALL &&  s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax 
+                s.structureType !=  STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax 
                 
         });
         var target = _.sortBy(targets,(r)=> r.hits/r.hitsMax)

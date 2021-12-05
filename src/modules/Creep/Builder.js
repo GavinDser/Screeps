@@ -32,7 +32,7 @@ export const Builder = {
         //         creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});          
         // }
         let sources = creep.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
         })
         let source = _.sortBy(sources, (s)=> s.store[RESOURCE_ENERGY]).reverse()
         if (source.length){

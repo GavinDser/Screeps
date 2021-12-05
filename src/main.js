@@ -72,7 +72,7 @@ export const loop = errorMapper(() => {
             energyUsing = energyAvaliable;
         }
         else{
-            energyUsing = 1300;
+            energyUsing = 1600;
         }
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyUsing),"Harvester_"+randomName.createName(),
         {memory: {role: "harvester"}});
@@ -89,9 +89,9 @@ export const loop = errorMapper(() => {
     }else if(upgraders.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Upgrader_"+randomName.createName(),
         {memory: {role: "upgrader"}});
-    }else if(repairers.length < 1){
-        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Repairer_"+randomName.createName(),
-        {memory: {role: "repairer"}});
+    // }else if(repairers.length < 1){
+    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Repairer_"+randomName.createName(),
+    //     {memory: {role: "repairer"}});
     }else if(builders.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Builder_"+randomName.createName(),
         {memory:{ role: "builder", target: 0}});
@@ -102,6 +102,8 @@ export const loop = errorMapper(() => {
     // }else if(crossHarvesters.length < 1) {
     //     Game.spawns['Spawn1'].spawnCreep(bodyType.createSoloBody('carry',1200),"CrossHarvester_"+randomName.createName(),
     //     {memory: {role:"crossHarvester", home:"E35S47", target:"E36S47"}});
+
+
     }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_0")){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_0",
         {memory: {role: "crossSourceHarvester", home:'E35S47', target:'E36S47'}});       
@@ -123,10 +125,20 @@ export const loop = errorMapper(() => {
     //       tower.repair(closestDamagedStructure);
     //   }
 
-      var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-      if(closestHostile) {
+        var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+        if(closestHostile) {
           tower.attack(closestHostile);
-      }
+        }
+        var targets = creep.room.find(FIND_STRUCTURES, {
+        filter: (s) => 
+            s.structureType !=  STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax 
+            
+        });
+
+        if(targets.length) {
+            tower.repair(target[0]);
+        }
+        
     }
 
 

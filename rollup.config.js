@@ -3,6 +3,7 @@ import screeps from 'rollup-plugin-screeps'
 import copy from 'rollup-plugin-copy'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
+import typescript from 'rollup-plugin-typescript2'  
 
 let config
 // 根据指定的目标获取对应的配置项
@@ -17,7 +18,7 @@ const pluginDeploy = config && config.copyPath ?
     copy({
         targets: [
             {
-                src: 'dist/main.js',
+                src: 'dist/main.ts',
                 dest: config.copyPath
             },
             {
@@ -46,6 +47,8 @@ export default {
         resolve(),
         // 模块化依赖
         commonjs(),
+        // typescript addition
+        typescript({ tsconfig: "./tsconfig.json" }),
         // 执行上传或者复制
         pluginDeploy
     ]
