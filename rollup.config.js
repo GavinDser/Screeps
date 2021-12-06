@@ -18,7 +18,7 @@ const pluginDeploy = config && config.copyPath ?
     copy({
         targets: [
             {
-                src: 'dist/main.ts',
+                src: 'dist/main.js',
                 dest: config.copyPath
             },
             {
@@ -35,7 +35,7 @@ const pluginDeploy = config && config.copyPath ?
     screeps({ config, dryRun: !config })
 
 export default {
-    input: 'src/main.js',
+    input: 'src/main.ts',
     output: {
         file: 'dist/main.js',
         format: 'cjs',
