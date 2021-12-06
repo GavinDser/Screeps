@@ -3258,14 +3258,21 @@ const Harvester = {
         if (!creep.memory.working) {
             var targets = creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN || structure.structureType == STRUCTURE_TOWER) &&
+                    return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_TOWER) &&
                         structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
                 }
             });
-            targets = _.sortBy(targets, (s) => creep.pos.getRangeTo(s));
+            targets = _.sortBy(targets, (s) => s.store[RESOURCE_ENERGY]); //creep.pos.getRangeTo
+            var spawns = creep.room.find(FIND_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_SPAWN && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0 });
             if (targets.length && creep.store[RESOURCE_ENERGY] == creep.store.getUsedCapacity()) {
                 if (creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
+                }
+            }
+            // if tower and extensions are full
+            else if (spawns.length) {
+                if (creep.transfer(spawns[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(spawns[0]);
                 }
             }
             //if nothing to store
@@ -3277,10 +3284,6 @@ const Harvester = {
                     }
                 }
             }
-            //// transfer all resources
-            // for(const resourceType in creep.carry) {
-            //     creep.transfer(storage, resourceType);
-            // }
         }
         else {
             // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
@@ -3289,22 +3292,21 @@ const Harvester = {
             var droppedEnergy = creep.room.find(FIND_DROPPED_RESOURCES, {
                 filter: (d) => d.amount >= 10
             });
-            // var tombEnergy = creep.room.find(FIND_TOMBSTONES, {
-            //     filter: (s) => s.creep.store != null
-            // });
-            // console.log(tombEnergy)
+            var tombEnergy = creep.room.find(FIND_TOMBSTONES, {
+                filter: (s) => s.store.getUsedCapacity() > 0
+            });
             if (droppedEnergy.length) {
                 if (creep.pickup(droppedEnergy[0]) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(droppedEnergy[0]);
                 }
             }
-            // else if(tombEnergy.length){
-            //     for (const resourceType in tombEnergy[0].store){
-            //         if (creep.withdraw(tombEnergy[0],resourceType) == ERR_NOT_IN_RANGE){
-            //             creep.moveTo(tombEnergy[0])
-            //         }
-            //     }
-            // }
+            else if (tombEnergy.length) {
+                for (const resourceType in tombEnergy[0].store) {
+                    if (creep.withdraw(tombEnergy[0], resourceType) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(tombEnergy[0]);
+                    }
+                }
+            }
             else {
                 let sources = creep.room.find(FIND_STRUCTURES, {
                     filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
@@ -3806,17 +3808,70 @@ const WallRepairer = {
 const Attacker = {
     run: function (creep, targetStructure) {
         if (creep.room.name == creep.memory.targetRoom) {
-            if (creep.attack(targetStructure) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(targetStructure.pos);
+            let t;
+            let sInvaderCore = creep.room.find(FIND_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_INVADER_CORE });
+            let enemyCreep = creep.room.find(FIND_HOSTILE_CREEPS);
+            if (enemyCreep.length) {
+                t = enemyCreep[0];
             }
-            else if (creep.rangedAttack(targetStructure) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(targetStructure.pos);
+            else if (sInvaderCore.length) {
+                t = sInvaderCore[0];
+            }
+            if (creep.attack(t) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(t.pos);
+            }
+            else if (creep.rangedAttack(t) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(t.pos);
+            }
+            if (!sInvaderCore.length && !enemyCreep.length) {
                 creep.heal(creep);
+                creep.moveTo(new RoomPosition(7, 21, creep.memory.targetRoom));
             }
         }
         else {
             let exit = creep.room.findExitTo(creep.memory.targetRoom);
             creep.moveTo(creep.pos.findClosestByRange(exit));
+        }
+    }
+};
+
+const Claimer = {
+    run: function (creep) {
+        if (creep.room.name == creep.memory.targetRoom) {
+            if (creep.reserveController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.controller);
+            }
+            else if (creep.reserveController(creep.room.controller) == ERR_INVALID_TARGET) {
+                creep.attackController(creep.room.controller);
+            }
+        }
+        else {
+            let exit = creep.room.findExitTo(creep.memory.targetRoom);
+            creep.moveTo(creep.pos.findClosestByRange(exit));
+        }
+    }
+};
+
+const Miner = {
+    run: function (creep) {
+        if (!creep.memory.working && creep.store.getFreeCapacity() != 0) {
+            creep.memory.working = true;
+        }
+        if (creep.memory.working && creep.store.getFreeCapacity() == 0) {
+            creep.memory.working = false;
+        }
+        if (!creep.memory.working) {
+            var storage = creep.room.storage;
+            for (const resourceType in creep.store) {
+                if (creep.transfer(storage, resourceType) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(storage);
+                }
+            }
+        }
+        else {
+            if (creep.harvest(creep.pos.findClosestByRange(FIND_MINERALS)) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.pos.findClosestByRange(FIND_MINERALS), { visualizePathStyle: { stroke: '#ffaa00' } });
+            }
         }
     }
 };
@@ -3995,14 +4050,13 @@ const loop = errorMapper(() => {
     }
     //spawn creep
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
-    var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
-    var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
     var wallRepairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'wallRepairer');
-    var crossHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossHarvester');
     var crossSourceHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossSourceHarvester');
     var attackers = _.filter(Game.creeps, (creep) => creep.memory.role == "attacker");
+    var claimers = _.filter(Game.creeps, (creep) => creep.memory.role == "claimer");
+    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == "miner");
     //resource pooint
     //energy count
     var energyMax = Game.spawns['Spawn1'].room.energyCapacityAvailable;
@@ -4012,7 +4066,7 @@ const loop = errorMapper(() => {
     // console.log("energyMax: "+energyMax);
     // console.log("Energy Avaliable: "+ energyAvaliable);
     //this.spawnCreep(body,name,{memory: {role: roleName}});
-    if (harvesters.length < 1) {
+    if (harvesters.length < 2) {
         let energyUsing = undefined;
         if (crossSourceHarvesters.length == 0 && harvesters.length == 0) {
             energyUsing = energyAvaliable;
@@ -4020,7 +4074,7 @@ const loop = errorMapper(() => {
         else {
             energyUsing = 1600;
         }
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(energyUsing), "Harvester_" + RandomName.createName(), { memory: { role: "harvester" } });
+        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.1, energyUsing), "Harvester_" + RandomName.createName(), { memory: { role: "harvester" } });
     }
     else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_0")) {
         Game.spawns['Spawn1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_0", { memory: { role: "harvestCreep", sourceId: '5bbcaf069099fc012e639ff5' } });
@@ -4030,27 +4084,27 @@ const loop = errorMapper(() => {
     }
     else if (upgraders.length < 1) {
         Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "Upgrader_" + RandomName.createName(), { memory: { role: "upgrader" } });
-        // }else if(repairers.length < 1){
-        //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Repairer_"+randomName.createName(),
-        //     {memory: {role: "repairer"}});
     }
     else if (builders.length < 1) {
         Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "Builder_" + RandomName.createName(), { memory: { role: "builder" } });
     }
     else if (wallRepairers.length < 1) {
         Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "WallRepairer_" + RandomName.createName(), { memory: { role: "wallRepairer", target: undefined } });
-        // }else if(attackers.length < 2){
-        //     Game.spawns['Spawn1'].spawnCreep([TOUGH,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,MOVE,MOVE,MOVE,MOVE,MOVE],"Attacker_"+randomName.createName(),
-        //     {memory: {role: "attacker", targetRoom:"E36S47"}});
-        // }else if(crossHarvesters.length < 1) {
-        //     Game.spawns['Spawn1'].spawnCreep(bodyType.createSoloBody('carry',1200),"CrossHarvester_"+randomName.createName(),
-        //     {memory: {role:"crossHarvester", homeRoom:"E35S47", targetRoom:"E36S47"}});
-        // }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_0")){
-        //     Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_0",
-        //     {memory: {role: "crossSourceHarvester", homeRoom:'E35S47', targetRoom:'E36S47'}});       
-        // }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_1")){
-        //     Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_1",
-        //     {memory: {role: "crossSourceHarvester", homeRoom:'E35S47', targetRoom:'E36S47'}});       
+    }
+    else if (claimers.length < 1) {
+        Game.spawns['Spawn1'].spawnCreep([CLAIM, CLAIM, MOVE, MOVE], "Claimer_" + RandomName.createName(), { memory: { role: "claimer", targetRoom: "E36S47" } });
+    }
+    else if (miners.length < 1) {
+        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.3, 1200), "Miner_" + RandomName.createName(), { memory: { role: "miner" } });
+    }
+    else if (attackers.length < 1) {
+        Game.spawns['Spawn1'].spawnCreep([TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE, MOVE], "Attacker_" + RandomName.createName(), { memory: { role: "attacker", targetRoom: "E36S47" } });
+    }
+    else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_0")) {
+        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4, energyMax), "CrossSourceHarvester_0", { memory: { role: "crossSourceHarvester", homeRoom: 'E35S47', targetRoom: 'E36S47' } });
+    }
+    else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_1")) {
+        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4, energyMax), "CrossSourceHarvester_1", { memory: { role: "crossSourceHarvester", homeRoom: 'E35S47', targetRoom: 'E36S47' } });
     }
     //tower logic
     var towers = Game.spawns['Spawn1'].room.find(FIND_STRUCTURES, {
@@ -4067,13 +4121,12 @@ const loop = errorMapper(() => {
         if (closestHostile) {
             tower.attack(closestHostile);
         }
-        // var targets:AnyStructure[] = creep.room.find(FIND_STRUCTURES, {
-        // filter: (s) => 
-        //     s.structureType !=  STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax 
-        // });
-        // if(targets.length) {
-        //     tower.repair(targets[0]);
-        // }
+        var targets = tower.room.find(FIND_STRUCTURES, {
+            filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax
+        });
+        if (targets.length && tower.store[RESOURCE_ENERGY] > 300) {
+            tower.repair(targets[0]);
+        }
     }
     //creep running
     for (name in Game.creeps) {
@@ -4108,6 +4161,12 @@ const loop = errorMapper(() => {
         }
         if (creep.memory.role == "attacker") {
             Attacker.run(creep, Game.getObjectById("61ad3d7c9a9476cea28addf2"));
+        }
+        if (creep.memory.role == "claimer") {
+            Claimer.run(creep);
+        }
+        if (creep.memory.role == "miner") {
+            Miner.run(creep);
         }
     }
     //奇怪的东西

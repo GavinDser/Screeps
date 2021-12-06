@@ -23,6 +23,8 @@ import { CrossHarvester as crossHarvester } from './modules/Creep/CrossHarvester
 import { CrossSourceHarvester as crossSourceHarvester } from './modules/Creep/CrossSourceHarvester'
 import { WallRepairer as wallRepairer } from './modules/Creep/WallRepairer'
 import { Attacker as attacker } from './modules/Creep/attacker'
+import { Claimer as claimer } from './modules/Creep/Claimer'
+import { Miner as miner } from './modules/Creep/Miner'
 
 
 // import "./modules/utils/Talk"
@@ -47,27 +49,26 @@ export const loop = errorMapper(() => {
 
     //spawn creep
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
-    var harvestCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvestCreep');
     var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
     var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
-    var repairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'repairer');
     var wallRepairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'wallRepairer');
-    var crossHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossHarvester');
     var crossSourceHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossSourceHarvester');
     var attackers = _.filter(Game.creeps, (creep) => creep.memory.role == "attacker");
+    var claimers = _.filter(Game.creeps, (creep) => creep.memory.role == "claimer");
+    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == "miner");
     //resource pooint
 
     //energy count
     var energyMax = Game.spawns['Spawn1'].room.energyCapacityAvailable;
     var energyAvaliable = Game.spawns['Spawn1'].room.energyAvailable;
-    var energy1 = Game.getObjectById('5bbcaf169099fc012e63a241');
-    var energy2 = Game.getObjectById('5bbcaf169099fc012e63a240');
+    var energy1 = Game.getObjectById('5bbcaf169099fc012e63a241') as Source;
+    var energy2 = Game.getObjectById('5bbcaf169099fc012e63a240') as Source;
     // console.log("energyMax: "+energyMax);
     // console.log("Energy Avaliable: "+ energyAvaliable);
 
     //this.spawnCreep(body,name,{memory: {role: roleName}});
 
-    if(harvesters.length < 1) {
+    if(harvesters.length < 2) {
         let energyUsing = undefined;
         if (crossSourceHarvesters.length == 0 && harvesters.length == 0){
             energyUsing = energyAvaliable;
@@ -75,7 +76,7 @@ export const loop = errorMapper(() => {
         else{
             energyUsing = 1600;
         }
-        Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(energyUsing),"Harvester_"+randomName.createName(),
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.1,energyUsing),"Harvester_"+randomName.createName(),
         {memory: {role: "harvester"}});
     
 
@@ -90,30 +91,28 @@ export const loop = errorMapper(() => {
     }else if(upgraders.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Upgrader_"+randomName.createName(),
         {memory: {role: "upgrader"}});
-    // }else if(repairers.length < 1){
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Repairer_"+randomName.createName(),
-    //     {memory: {role: "repairer"}});
     }else if(builders.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"Builder_"+randomName.createName(),
         {memory:{ role: "builder"}});
     }else if(wallRepairers.length < 1){
         Game.spawns['Spawn1'].spawnCreep(bodyType.createAverageBody(1200),"WallRepairer_"+randomName.createName(),
         {memory: {role: "wallRepairer", target: undefined}});
-    // }else if(attackers.length < 2){
-    //     Game.spawns['Spawn1'].spawnCreep([TOUGH,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,MOVE,MOVE,MOVE,MOVE,MOVE],"Attacker_"+randomName.createName(),
-    //     {memory: {role: "attacker", targetRoom:"E36S47"}});
-    
-    // }else if(crossHarvesters.length < 1) {
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createSoloBody('carry',1200),"CrossHarvester_"+randomName.createName(),
-    //     {memory: {role:"crossHarvester", homeRoom:"E35S47", targetRoom:"E36S47"}});
-
-
-    // }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_0")){
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_0",
-    //     {memory: {role: "crossSourceHarvester", homeRoom:'E35S47', targetRoom:'E36S47'}});       
-    // }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_1")){
-    //     Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_1",
-    //     {memory: {role: "crossSourceHarvester", homeRoom:'E35S47', targetRoom:'E36S47'}});       
+    }else if(claimers.length < 1){
+        Game.spawns['Spawn1'].spawnCreep([CLAIM,CLAIM,MOVE,MOVE],"Claimer_"+randomName.createName(),
+        {memory: {role: "claimer", targetRoom:"E36S47"}}); 
+    }else if (miners.length < 1){
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.3,1200), "Miner_"+randomName.createName(),
+        {memory: {role: "miner"}});
+ 
+    }else if(attackers.length < 1){
+        Game.spawns['Spawn1'].spawnCreep([TOUGH,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,ATTACK,HEAL,MOVE,MOVE,MOVE,MOVE,MOVE],"Attacker_"+randomName.createName(),
+        {memory: {role: "attacker", targetRoom:"E36S47"}});
+    }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_0")){
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_0",
+        {memory: {role: "crossSourceHarvester", homeRoom:'E35S47', targetRoom:'E36S47'}});       
+    }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_1")){
+        Game.spawns['Spawn1'].spawnCreep(bodyType.createPercentageBody(0.4,energyMax),"CrossSourceHarvester_1",
+        {memory: {role: "crossSourceHarvester", homeRoom:'E35S47', targetRoom:'E36S47'}});       
     }
     //tower logic
 
@@ -133,15 +132,15 @@ export const loop = errorMapper(() => {
         if(closestHostile) {
           tower.attack(closestHostile);
         }
-        // var targets:AnyStructure[] = creep.room.find(FIND_STRUCTURES, {
-        // filter: (s) => 
-        //     s.structureType !=  STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax 
+        var targets:AnyStructure[] = tower.room.find(FIND_STRUCTURES, {
+        filter: (s) => 
+            s.structureType !=  STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax 
             
-        // });
+        });
 
-        // if(targets.length) {
-        //     tower.repair(targets[0]);
-        // }
+        if(targets.length && tower.store[RESOURCE_ENERGY] > 300) {
+            tower.repair(targets[0]);
+        }
         
     }
 
@@ -179,6 +178,12 @@ export const loop = errorMapper(() => {
         }
         if (creep.memory.role == "attacker"){
             attacker.run(creep,Game.getObjectById("61ad3d7c9a9476cea28addf2"));
+        }
+        if (creep.memory.role == "claimer"){
+            claimer.run(creep);
+        }
+        if (creep.memory.role == "miner"){
+            miner.run(creep);
         }
 
 

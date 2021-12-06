@@ -4,7 +4,7 @@ import { Builder as builder } from "./Builder";
 export const CrossSourceHarvester = {
 
     /** @param {Creep} creep **/
-    run: function(creep: Creep ,source) {
+    run: function(creep: Creep ,source: Source ) {
         if(!creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
             creep.memory.working = true;
         }
@@ -22,7 +22,7 @@ export const CrossSourceHarvester = {
                         creep.moveTo(droppedEnergy[0]);
                     }
                 }
-                else{
+                else{1
                     if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(source);
                     }
