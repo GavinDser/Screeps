@@ -18,7 +18,7 @@ export const Miner = {
         else{
             if(creep.harvest(creep.pos.findClosestByRange(FIND_MINERALS)) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.pos.findClosestByRange(FIND_MINERALS), {visualizePathStyle: {stroke: '#ffaa00'}});
-            }   
+            }  
         }
     }
 }

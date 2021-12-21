@@ -1,4 +1,4 @@
-import { Repairer as repairer } from "./Repairer";
+import { Upgrader as upgrader } from "./Upgrader";
 import { WallRepairer as wallRepairer } from "./WallRepairer";
 export const Builder = {
 
@@ -20,17 +20,13 @@ export const Builder = {
               }
           }
           else{
-              wallRepairer.run(creep);
+                wallRepairer.run(creep);
+              
           }
     }
     else {
 
 
-
-
-        //     if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-        //         creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});          
-        // }
         let sources = creep.room.find(FIND_STRUCTURES, {
             filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
         })
@@ -40,9 +36,21 @@ export const Builder = {
                 creep.moveTo(source[0]);
             }
         }
-        else{
+        else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 1000){
             if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
                 creep.moveTo(creep.room.storage)
+            }
+        }
+        else{
+            if (creep.memory.sourceId){
+                if (creep.harvest(Game.getObjectById(creep.memory.sourceId)) == ERR_NOT_IN_RANGE){
+                    creep.moveTo(Game.getObjectById(creep.memory.sourceId))
+                }
+            }
+            else{
+                if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+                }
             }
         }
     }

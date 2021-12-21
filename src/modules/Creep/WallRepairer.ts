@@ -6,6 +6,9 @@
 * var mod = require('Repairer');
 * mod.thing == 'a thing'; // true
 */
+
+import { createRestTypeNode } from "typescript";
+
 //import { Upgrader as upgrader } from "./Upgrader";
 export const WallRepairer = {
 
@@ -24,7 +27,7 @@ export const WallRepairer = {
 
         var ramparts = creep.room.find(FIND_STRUCTURES, {
             filter: (s) => 
-                s.structureType ==  STRUCTURE_RAMPART && (s.hits/s.hitsMax)
+                s.structureType ==  STRUCTURE_RAMPART && (s.hits/s.hitsMax < 0.5)
             
         });
         var findRampart = function(){
@@ -44,7 +47,7 @@ export const WallRepairer = {
                     creep.memory.target = findRampart();     
                 }
             }
-            else if (creep.memory.target != undefined && creep.memory.target.hits/creep.memory.target.hitsMax){
+            else if (creep.memory.target != undefined && creep.memory.target.hits<creep.memory.target.hitsMax){
                 if (newRampart().length && creep.memory.target.id != newRampart()[0].id){
                     creep.memory.target = undefined
                 }
@@ -56,7 +59,7 @@ export const WallRepairer = {
                 creep.memory.target = undefined
             }
         }
-        else{     
+        else{    
             var walls = creep.room.find(FIND_STRUCTURES, {
                 filter: (s) => {
                   return (s.structureType == STRUCTURE_WALL && s.hits/s.hitsMax)
@@ -73,7 +76,7 @@ export const WallRepairer = {
                     //upgrader.run(creep)
                 }
             }
-            else if (creep.memory.target.hits/creep.memory.target.hitsMax < 0.05){
+            else if (creep.memory.target.hits/creep.memory.target.hitsMax){
                     if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                     }
@@ -95,7 +98,7 @@ export const WallRepairer = {
         //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
         //   }
         let sources = creep.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
         })
         let source = _.sortBy(sources, (s:StructureContainer)=> s.store[RESOURCE_ENERGY]).reverse()
         if (source.length){
@@ -103,11 +106,11 @@ export const WallRepairer = {
                 creep.moveTo(source[0]);
             }
         }
-        else{
-            if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-                creep.moveTo(creep.room.storage)
-            }
-        }
+        // else{
+        //     if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+        //         creep.moveTo(creep.room.storage)
+        //     }
+        // }
 
     }
 }

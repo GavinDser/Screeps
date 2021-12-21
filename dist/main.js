@@ -3246,6 +3246,157 @@ var SourceMapConsumer = sourceMapConsumer.SourceMapConsumer;
      }
  };
 
+/*
+* Module code goes here. Use 'module.exports' to export things:
+* module.exports.thing = 'a thing';
+*
+* You can import it from another modules like this:
+* var mod = require('Repairer');
+* mod.thing == 'a thing'; // true
+*/
+//import { Upgrader as upgrader } from "./Upgrader";
+const WallRepairer$1 = {
+    /** @param {Creep} creep **/
+    run: function (creep) {
+        if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+            creep.memory.working = false;
+        }
+        if (!creep.memory.working && creep.store.getFreeCapacity() == 0) {
+            creep.memory.working = true;
+        }
+        if (creep.memory.working) {
+            var ramparts = creep.room.find(FIND_STRUCTURES, {
+                filter: (s) => s.structureType == STRUCTURE_RAMPART && (s.hits / s.hitsMax < 0.5)
+            });
+            var findRampart = function () {
+                let rampart = _.sortBy(ramparts, (r) => (r.hits / r.hitsMax));
+                return rampart[0];
+            };
+            var newRampart = function () {
+                let rampart = ramparts.filter((r) => r.hits < 100);
+                return rampart;
+            };
+            if (ramparts.length) {
+                if (creep.memory.target == undefined || creep.memory.target.structureType != STRUCTURE_RAMPART) {
+                    if (newRampart().length) {
+                        creep.memory.target = newRampart()[0];
+                    }
+                    else {
+                        creep.memory.target = findRampart();
+                    }
+                }
+                else if (creep.memory.target != undefined && creep.memory.target.hits < creep.memory.target.hitsMax) {
+                    if (newRampart().length && creep.memory.target.id != newRampart()[0].id) {
+                        creep.memory.target = undefined;
+                    }
+                    if (creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(Game.getObjectById(creep.memory.target.id), { visualizePathStyle: { stroke: '#ffffff' } });
+                    }
+                }
+                else {
+                    creep.memory.target = undefined;
+                }
+            }
+            else {
+                var walls = creep.room.find(FIND_STRUCTURES, {
+                    filter: (s) => {
+                        return (s.structureType == STRUCTURE_WALL && s.hits / s.hitsMax);
+                    }
+                });
+                var findTarget = function () {
+                    let wall = _.sortBy(walls, (w) => w.hits / w.hitsMax);
+                    return wall[0];
+                };
+                if (creep.memory.target == undefined) {
+                    creep.memory.target = findTarget();
+                    if (!creep.memory.target) ;
+                }
+                else if (creep.memory.target.hits / creep.memory.target.hitsMax) {
+                    if (creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(Game.getObjectById(creep.memory.target.id), { visualizePathStyle: { stroke: '#ffffff' } });
+                    }
+                }
+                else {
+                    creep.memory.target = undefined;
+                }
+            }
+        }
+        else {
+            // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+            //     creep.moveTo(creep.room.storage)
+            // }
+            //   if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+            //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+            //   }
+            let sources = creep.room.find(FIND_STRUCTURES, {
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
+            });
+            let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
+            if (source.length) {
+                if (creep.withdraw(source[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(source[0]);
+                }
+            }
+            // else{
+            //     if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+            //         creep.moveTo(creep.room.storage)
+            //     }
+            // }
+        }
+    }
+};
+
+const Builder$1 = {
+    /** @param {Creep} creep **/
+    run: function (creep) {
+        if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+            creep.memory.working = false;
+        }
+        if (!creep.memory.working && creep.store.getFreeCapacity() == 0) {
+            creep.memory.working = true;
+        }
+        if (creep.memory.working) {
+            var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+            if (targets.length) {
+                if (creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
+                }
+            }
+            else {
+                WallRepairer$1.run(creep);
+            }
+        }
+        else {
+            let sources = creep.room.find(FIND_STRUCTURES, {
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
+            });
+            let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
+            if (source.length) {
+                if (creep.withdraw(source[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(source[0]);
+                }
+            }
+            else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 1000) {
+                if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.storage);
+                }
+            }
+            else {
+                if (creep.memory.sourceId) {
+                    if (creep.harvest(Game.getObjectById(creep.memory.sourceId)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(Game.getObjectById(creep.memory.sourceId));
+                    }
+                }
+                else {
+                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    }
+                }
+            }
+        }
+    }
+};
+
 const Harvester = {
     /** @param {Creep} creep **/
     run: function (creep) {
@@ -3256,32 +3407,48 @@ const Harvester = {
             creep.memory.working = false;
         }
         if (!creep.memory.working) {
-            var targets = creep.room.find(FIND_STRUCTURES, {
+            var extensions = creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_TOWER) &&
-                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+                    return (structure.structureType == STRUCTURE_EXTENSION && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
                 }
             });
-            targets = _.sortBy(targets, (s) => s.store[RESOURCE_ENERGY]); //creep.pos.getRangeTo
+            var towers = creep.room.find(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return (structure.structureType == STRUCTURE_TOWER && structure.store[RESOURCE_ENERGY] <= 500);
+                }
+            });
             var spawns = creep.room.find(FIND_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_SPAWN && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0 });
-            if (targets.length && creep.store[RESOURCE_ENERGY] == creep.store.getUsedCapacity()) {
-                if (creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
+            extensions = _.sortBy(extensions, (s) => creep.pos.getRangeTo(s)); //creep.pos.getRangeTo
+            towers = _.sortBy(towers, (s) => creep.pos.getRangeTo(s)); //creep.pos.getRangeTo
+            if (extensions.length) {
+                if (creep.transfer(extensions[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(extensions[0], { visualizePathStyle: { stroke: '#ffffff' } });
                 }
             }
-            // if tower and extensions are full
             else if (spawns.length) {
                 if (creep.transfer(spawns[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(spawns[0]);
                 }
             }
-            //if nothing to store
+            // if extensions and spawns are full
+            else if (towers.length) {
+                if (creep.transfer(towers[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(towers[0], { visualizePathStyle: { stroke: '#ffffff' } });
+                }
+            }
+            //if nothing to store or carrying not ENERGY-ONLY
             else {
-                var storage = creep.room.storage;
-                for (const resourceType in creep.store) {
-                    if (creep.transfer(storage, resourceType) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(storage);
+                if (creep.room.storage) {
+                    var storage = creep.room.storage;
+                    for (const resourceType in creep.store) {
+                        if (creep.transfer(storage, resourceType) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(storage);
+                        }
                     }
+                }
+                //删
+                else {
+                    Builder$1.run(creep);
                 }
             }
         }
@@ -3289,22 +3456,23 @@ const Harvester = {
             // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
             //     creep.moveTo(creep.room.storage)
             // }
-            var droppedEnergy = creep.room.find(FIND_DROPPED_RESOURCES, {
-                filter: (d) => d.amount >= 10
+            var unfilledExtension = creep.room.find(FIND_STRUCTURES, {
+                filter: (s) => s.structureType == STRUCTURE_EXTENSION && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
             });
-            var tombEnergy = creep.room.find(FIND_TOMBSTONES, {
-                filter: (s) => s.store.getUsedCapacity() > 0
-            });
-            if (droppedEnergy.length) {
-                if (creep.pickup(droppedEnergy[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(droppedEnergy[0]);
+            let link1;
+            let link0;
+            if (creep.memory.linkList != undefined) {
+                link1 = Game.getObjectById(creep.memory.linkList[1]);
+                link0 = Game.getObjectById(creep.memory.linkList[0]);
+            }
+            if (link1 && link1.store.getUsedCapacity(RESOURCE_ENERGY) > 0 && unfilledExtension.length) {
+                if (creep.withdraw(link1, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(link1);
                 }
             }
-            else if (tombEnergy.length) {
-                for (const resourceType in tombEnergy[0].store) {
-                    if (creep.withdraw(tombEnergy[0], resourceType) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(tombEnergy[0]);
-                    }
+            else if (link0 && link0.store.getUsedCapacity(RESOURCE_ENERGY) > 0 && !(unfilledExtension.length)) {
+                if (creep.withdraw(link0, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(link0);
                 }
             }
             else {
@@ -3318,8 +3486,15 @@ const Harvester = {
                     }
                 }
                 else {
-                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    if (creep.memory.sourceId) {
+                        if (creep.harvest(Game.getObjectById(creep.memory.sourceId)) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(Game.getObjectById(creep.memory.sourceId));
+                        }
+                    }
+                    else {
+                        if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                        }
                     }
                 }
             }
@@ -3348,7 +3523,7 @@ const HarvestCreep = {
  * var mod = require('Upgrader');
  * mod.thing == 'a thing'; // true
  */
-const Upgrader = {
+const Upgrader$1 = {
     /** @param {Creep} creep **/
     run: function (creep) {
         if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
@@ -3361,25 +3536,45 @@ const Upgrader = {
             if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
                 creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffffff' } });
             }
+            // if(creep.signController(creep.room.controller,"Farmer player 😣") == ERR_NOT_IN_RANGE){
+            //     creep.moveTo(creep.room.controller)
+            // }
         }
         else {
-            let sources = creep.room.find(FIND_STRUCTURES, {
-                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 200
-            });
-            let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
-            if (source.length) {
-                if (creep.withdraw(source[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source[0]);
+            if (!creep.memory.controllerSource) {
+                let sources = creep.room.find(FIND_STRUCTURES, {
+                    filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
+                });
+                let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
+                if (source.length) {
+                    if (creep.withdraw(source[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(source[0]);
+                    }
+                }
+                else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 1000) {
+                    if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.room.storage);
+                    }
+                }
+                else {
+                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    }
                 }
             }
             else {
-                if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.storage);
+                if (creep.memory.stateSwitch) {
+                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    }
+                    creep.upgradeController(creep.room.controller);
+                    creep.memory.stateSwitch = false;
+                }
+                else {
+                    creep.upgradeController(creep.room.controller);
+                    creep.memory.stateSwitch = true;
                 }
             }
-            // if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-            //     creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
-            // }
         }
     }
 };
@@ -3393,7 +3588,7 @@ const Upgrader = {
 * mod.thing == 'a thing'; // true
 */
 //import { Upgrader as upgrader } from "./Upgrader";
-const WallRepairer$1 = {
+const WallRepairer = {
     /** @param {Creep} creep **/
     run: function (creep) {
         if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
@@ -3404,7 +3599,7 @@ const WallRepairer$1 = {
         }
         if (creep.memory.working) {
             var ramparts = creep.room.find(FIND_STRUCTURES, {
-                filter: (s) => s.structureType == STRUCTURE_RAMPART && (s.hits / s.hitsMax)
+                filter: (s) => s.structureType == STRUCTURE_RAMPART && (s.hits / s.hitsMax < 0.5)
             });
             var findRampart = function () {
                 let rampart = _.sortBy(ramparts, (r) => (r.hits / r.hitsMax));
@@ -3423,7 +3618,7 @@ const WallRepairer$1 = {
                         creep.memory.target = findRampart();
                     }
                 }
-                else if (creep.memory.target != undefined && creep.memory.target.hits / creep.memory.target.hitsMax) {
+                else if (creep.memory.target != undefined && creep.memory.target.hits < creep.memory.target.hitsMax) {
                     if (newRampart().length && creep.memory.target.id != newRampart()[0].id) {
                         creep.memory.target = undefined;
                     }
@@ -3449,7 +3644,7 @@ const WallRepairer$1 = {
                     creep.memory.target = findTarget();
                     if (!creep.memory.target) ;
                 }
-                else if (creep.memory.target.hits / creep.memory.target.hitsMax < 0.05) {
+                else if (creep.memory.target.hits / creep.memory.target.hitsMax) {
                     if (creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(Game.getObjectById(creep.memory.target.id), { visualizePathStyle: { stroke: '#ffffff' } });
                     }
@@ -3467,7 +3662,7 @@ const WallRepairer$1 = {
             //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
             //   }
             let sources = creep.room.find(FIND_STRUCTURES, {
-                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
+                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
             });
             let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
             if (source.length) {
@@ -3475,11 +3670,11 @@ const WallRepairer$1 = {
                     creep.moveTo(source[0]);
                 }
             }
-            else {
-                if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.storage);
-                }
-            }
+            // else{
+            //     if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+            //         creep.moveTo(creep.room.storage)
+            //     }
+            // }
         }
     }
 };
@@ -3501,13 +3696,10 @@ const Builder = {
                 }
             }
             else {
-                WallRepairer$1.run(creep);
+                WallRepairer.run(creep);
             }
         }
         else {
-            //     if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-            //         creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});          
-            // }
             let sources = creep.room.find(FIND_STRUCTURES, {
                 filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
             });
@@ -3517,9 +3709,21 @@ const Builder = {
                     creep.moveTo(source[0]);
                 }
             }
-            else {
+            else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 1000) {
                 if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(creep.room.storage);
+                }
+            }
+            else {
+                if (creep.memory.sourceId) {
+                    if (creep.harvest(Game.getObjectById(creep.memory.sourceId)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(Game.getObjectById(creep.memory.sourceId));
+                    }
+                }
+                else {
+                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    }
                 }
             }
         }
@@ -3555,7 +3759,7 @@ const Repairer = {
             }
             // if nothing to repair
             else {
-                Upgrader.run(creep);
+                Upgrader$1.run(creep);
             }
         }
         else {
@@ -3580,226 +3784,60 @@ const Repairer = {
     }
 };
 
-const CrossHarvester = {
-    /** @param {Creep} creep **/
-    run: function (creep) {
-        if (!creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
-            creep.memory.working = true;
-        }
-        if (creep.memory.working && creep.store.getFreeCapacity() == 0) {
-            creep.memory.working = false;
-        }
-        if (creep.memory.working) {
-            if (creep.room.name == creep.memory.targetRoom) {
-                var findSource = function () {
-                    var source = creep.room.find(FIND_STRUCTURES, {
-                        filter: (s) => {
-                            return s.structureType == STRUCTURE_TOWER || s.structureType == STRUCTURE_EXTENSION && s.store[RESOURCE_ENERGY] > 0;
-                        }
-                    });
-                    return source[0];
-                };
-                creep.memory.source = findSource();
-                if (creep.memory.source != undefined) {
-                    if (creep.memory.source.store[RESOURCE_ENERGY] > 0) {
-                        if (creep.withdraw(creep.memory.source, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                            creep.moveTo(creep.memory.source);
-                        }
-                    }
-                    else {
-                        creep.memory.source = findSource();
-                    }
-                }
-                else {
-                    creep.memory.working = false;
-                }
-            }
-            // if creep is not in the target room
-            else {
-                let exit = creep.room.findExitTo(creep.memory.targetRoom);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-            }
-            // finished harvesting
-        }
-        else {
-            if (creep.room.name == creep.memory.homeRoom) {
-                var storage = creep.room.find(FIND_STRUCTURES, {
-                    filter: (s) => {
-                        return s.structureType == STRUCTURE_STORAGE &&
-                            s.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-                    }
-                });
-                if (storage.length) {
-                    if (creep.transfer(storage[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(storage[0], { visualizePathStyle: { stroke: '#ffffff' } });
-                    }
-                }
-                else {
-                    Harvester.run(creep);
-                }
-            }
-            // if not in home room
-            else {
-                let exit = creep.room.findExitTo(creep.memory.homeRoom);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-            }
-        }
-    }
-};
-
 const CrossSourceHarvester = {
     /** @param {Creep} creep **/
-    run: function (creep, source) {
-        if (!creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
-            creep.memory.working = true;
-        }
-        if (creep.memory.working && creep.store.getFreeCapacity() == 0) {
-            creep.memory.working = false;
-        }
-        if (creep.memory.working) {
-            if (creep.room.name == creep.memory.targetRoom) {
-                var droppedEnergy = creep.room.find(FIND_DROPPED_RESOURCES, {
-                    filter: (d) => d.amount >= 10
-                });
-                if (droppedEnergy.length) {
-                    if (creep.pickup(droppedEnergy[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(droppedEnergy[0]);
-                    }
-                }
-                else {
-                    if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(source);
-                    }
-                }
+    run: function (creep, source, link) {
+        if (!(creep.hits < creep.hitsMax)) {
+            if (!creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+                creep.memory.working = true;
             }
-            // if creep is not in the target room
-            else {
-                let exit = creep.room.findExitTo(creep.memory.targetRoom);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
+            if (creep.memory.working && creep.store.getFreeCapacity() == 0) {
+                creep.memory.working = false;
             }
-            // finished harvesting
-        }
-        else {
-            if (creep.room.name == creep.memory.homeRoom) {
-                // var storage = creep.room.find(FIND_STRUCTURES, {
-                //     filter: (s) => {
-                //         return s.structureType == STRUCTURE_STORAGE &&
-                //         s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                //     }
-                // });
-                // if (storage.length){
-                //     if(creep.transfer(storage[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                //         creep.moveTo(storage[0], {visualizePathStyle: {stroke: '#ffffff'}});
-                //     } 
-                // }
-                // else{
-                Harvester.run(creep);
-                //}
-            }
-            // if not in home room
-            else {
-                let exit = creep.room.findExitTo(creep.memory.homeRoom);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-            }
-        }
-    }
-};
-
-/*
-* Module code goes here. Use 'module.exports' to export things:
-* module.exports.thing = 'a thing';
-*
-* You can import it from another modules like this:
-* var mod = require('Repairer');
-* mod.thing == 'a thing'; // true
-*/
-//import { Upgrader as upgrader } from "./Upgrader";
-const WallRepairer = {
-    /** @param {Creep} creep **/
-    run: function (creep) {
-        if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
-            creep.memory.working = false;
-        }
-        if (!creep.memory.working && creep.store.getFreeCapacity() == 0) {
-            creep.memory.working = true;
-        }
-        if (creep.memory.working) {
-            var ramparts = creep.room.find(FIND_STRUCTURES, {
-                filter: (s) => s.structureType == STRUCTURE_RAMPART && (s.hits / s.hitsMax)
-            });
-            var findRampart = function () {
-                let rampart = _.sortBy(ramparts, (r) => (r.hits / r.hitsMax));
-                return rampart[0];
-            };
-            var newRampart = function () {
-                let rampart = ramparts.filter((r) => r.hits < 100);
-                return rampart;
-            };
-            if (ramparts.length) {
-                if (creep.memory.target == undefined || creep.memory.target.structureType != STRUCTURE_RAMPART) {
-                    if (newRampart().length) {
-                        creep.memory.target = newRampart()[0];
+            if (creep.memory.working) {
+                if (creep.room.name == creep.memory.targetRoom) {
+                    var droppedEnergy = creep.room.find(FIND_DROPPED_RESOURCES, {
+                        filter: (d) => d.amount >= 10
+                    });
+                    if (droppedEnergy.length) {
+                        if (creep.pickup(droppedEnergy[0]) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(droppedEnergy[0]);
+                        }
                     }
                     else {
-                        creep.memory.target = findRampart();
+                        if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(source);
+                        }
                     }
                 }
-                else if (creep.memory.target != undefined && creep.memory.target.hits / creep.memory.target.hitsMax) {
-                    if (newRampart().length && creep.memory.target.id != newRampart()[0].id) {
-                        creep.memory.target = undefined;
-                    }
-                    if (creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(Game.getObjectById(creep.memory.target.id), { visualizePathStyle: { stroke: '#ffffff' } });
-                    }
-                }
+                // if creep is not in the target room
                 else {
-                    creep.memory.target = undefined;
+                    let exit = creep.room.findExitTo(creep.memory.targetRoom);
+                    creep.moveTo(creep.pos.findClosestByRange(exit));
                 }
+                // finished harvesting
             }
             else {
-                var walls = creep.room.find(FIND_STRUCTURES, {
-                    filter: (s) => {
-                        return (s.structureType == STRUCTURE_WALL && s.hits / s.hitsMax);
+                if (creep.room.name == creep.memory.homeRoom) {
+                    if (link && link.store.getFreeCapacity(RESOURCE_ENERGY) > 100) {
+                        if (creep.transfer(link, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(link);
+                        }
                     }
-                });
-                var findTarget = function () {
-                    let wall = _.sortBy(walls, (w) => w.hits / w.hitsMax);
-                    return wall[0];
-                };
-                if (creep.memory.target == undefined) {
-                    creep.memory.target = findTarget();
-                    if (!creep.memory.target) ;
-                }
-                else if (creep.memory.target.hits / creep.memory.target.hitsMax < 0.05) {
-                    if (creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(Game.getObjectById(creep.memory.target.id), { visualizePathStyle: { stroke: '#ffffff' } });
+                    else {
+                        Harvester.run(creep);
                     }
                 }
+                // if not in home room
                 else {
-                    creep.memory.target = undefined;
+                    let exit = creep.room.findExitTo(creep.memory.homeRoom);
+                    creep.moveTo(creep.pos.findClosestByRange(exit));
                 }
             }
         }
         else {
-            // if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
-            //     creep.moveTo(creep.room.storage)
-            // }
-            //   if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-            //       creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
-            //   }
-            let sources = creep.room.find(FIND_STRUCTURES, {
-                filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
-            });
-            let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
-            if (source.length) {
-                if (creep.withdraw(source[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(source[0]);
-                }
-            }
-            else {
-                if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.storage);
-                }
+            if (!(creep.pos.isEqualTo(new RoomPosition(7, 22, creep.memory.targetRoom)))) {
+                creep.moveTo(new RoomPosition(7, 22, creep.memory.targetRoom));
             }
         }
     }
@@ -3811,6 +3849,7 @@ const Attacker = {
             let t;
             let sInvaderCore = creep.room.find(FIND_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_INVADER_CORE });
             let enemyCreep = creep.room.find(FIND_HOSTILE_CREEPS);
+            let damagedCreep = creep.room.find(FIND_MY_CREEPS, { filter: (c) => c.hits < c.hitsMax });
             if (enemyCreep.length) {
                 t = enemyCreep[0];
             }
@@ -3824,8 +3863,15 @@ const Attacker = {
                 creep.moveTo(t.pos);
             }
             if (!sInvaderCore.length && !enemyCreep.length) {
-                creep.heal(creep);
                 creep.moveTo(new RoomPosition(7, 21, creep.memory.targetRoom));
+            }
+            if (creep.pos.isEqualTo(new RoomPosition(7, 21, creep.memory.targetRoom))) {
+                if (damagedCreep.length) {
+                    creep.heal(damagedCreep[0]);
+                }
+                else {
+                    creep.heal(creep);
+                }
             }
         }
         else {
@@ -3873,6 +3919,1690 @@ const Miner = {
                 creep.moveTo(creep.pos.findClosestByRange(FIND_MINERALS), { visualizePathStyle: { stroke: '#ffaa00' } });
             }
         }
+    }
+};
+
+/*
+ * Module code goes here. Use 'module.exports' to export things:
+ * module.exports.thing = 'a thing';
+ *
+ * You can import it from another modules like this:
+ * var mod = require('Upgrader');
+ * mod.thing == 'a thing'; // true
+ */
+const Upgrader = {
+    /** @param {Creep} creep **/
+    run: function (creep) {
+        if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+            creep.memory.working = false;
+        }
+        if (!creep.memory.working && creep.store.getFreeCapacity() == 0) {
+            creep.memory.working = true;
+        }
+        if (creep.memory.working) {
+            if (creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(creep.room.controller, { visualizePathStyle: { stroke: '#ffffff' } });
+            }
+            // if(creep.signController(creep.room.controller,"Farmer player 😣") == ERR_NOT_IN_RANGE){
+            //     creep.moveTo(creep.room.controller)
+            // }
+        }
+        else {
+            if (!creep.memory.controllerSource) {
+                let sources = creep.room.find(FIND_STRUCTURES, {
+                    filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
+                });
+                let source = _.sortBy(sources, (s) => s.store[RESOURCE_ENERGY]).reverse();
+                if (source.length) {
+                    if (creep.withdraw(source[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(source[0]);
+                    }
+                }
+                else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 1000) {
+                    if (creep.withdraw(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.room.storage);
+                    }
+                }
+                else {
+                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    }
+                }
+            }
+            else {
+                if (creep.memory.stateSwitch) {
+                    if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                    }
+                    creep.upgradeController(creep.room.controller);
+                    creep.memory.stateSwitch = false;
+                }
+                else {
+                    creep.upgradeController(creep.room.controller);
+                    creep.memory.stateSwitch = true;
+                }
+            }
+        }
+    }
+};
+
+const TrashHarvester = {
+    /** @param {Creep} creep **/
+    run: function (creep) {
+        if (!creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+            creep.memory.working = true;
+        }
+        if (creep.memory.working && creep.store.getFreeCapacity() == 0) {
+            creep.memory.working = false;
+        }
+        if (creep.room.name == creep.memory.homeRoom) {
+            //全局使用判定是否过多能量，需要存storage
+            var tombEnergy = creep.room.find(FIND_TOMBSTONES, {
+                filter: (s) => s.store.getUsedCapacity() > 0
+            });
+            var droppedEnergy = creep.room.find(FIND_DROPPED_RESOURCES, {
+                filter: (d) => d.amount >= 0
+            });
+            var ruinEnergy = creep.room.find(FIND_RUINS, {
+                filter: (s) => s.store.getUsedCapacity() > 0
+            });
+            droppedEnergy = _.sortBy(droppedEnergy, (s) => creep.pos.getRangeTo(s));
+            if (!creep.memory.working) {
+                if (creep.store[RESOURCE_ENERGY] != creep.store.getUsedCapacity()) {
+                    var storage = creep.room.storage;
+                    for (const resourceType in creep.store) {
+                        if (creep.transfer(storage, resourceType) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(storage);
+                        }
+                    }
+                }
+                else {
+                    let harvesterNum = _.filter(Game.creeps, (c) => c.memory.role == 'harvester' && c.memory.homeRoom == creep.room.name).length;
+                    let towers = creep.room.find(FIND_STRUCTURES, {
+                        filter: (structure) => {
+                            return (structure.structureType == STRUCTURE_TOWER && structure.store[RESOURCE_ENERGY] <= 700);
+                        }
+                    });
+                    //如果过多energy依然在墓地，则存storage
+                    if (tombEnergy.length || droppedEnergy.length || ruinEnergy.length) {
+                        if (creep.transfer(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(creep.room.storage);
+                        }
+                    }
+                    else if (harvesterNum < 1) {
+                        Harvester.run(creep);
+                    }
+                    else if (towers.length) {
+                        if (creep.transfer(towers[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(towers[0], { visualizePathStyle: { stroke: '#ffffff' } });
+                        }
+                    }
+                    else {
+                        Upgrader.run(creep);
+                    }
+                }
+            }
+            else {
+                if (droppedEnergy.length) {
+                    if (creep.pickup(droppedEnergy[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(droppedEnergy[0]);
+                    }
+                }
+                else if (tombEnergy.length) {
+                    for (const resourceType in tombEnergy[0].store) {
+                        if (creep.withdraw(tombEnergy[0], resourceType) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(tombEnergy[0]);
+                        }
+                    }
+                }
+                else if (ruinEnergy.length) {
+                    for (const resourceType in ruinEnergy[0].store) {
+                        if (creep.withdraw(ruinEnergy[0], resourceType) == ERR_NOT_IN_RANGE) {
+                            creep.moveTo(ruinEnergy[0]);
+                        }
+                    }
+                }
+                else {
+                    // let sources = creep.room.find(FIND_STRUCTURES, {
+                    //     filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 0
+                    // })
+                    // let source = _.sortBy(sources, (s:StructureContainer)=> s.store[RESOURCE_ENERGY]).reverse()
+                    // if (source.length){
+                    //     if (creep.withdraw(source[0],RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+                    //         creep.moveTo(source[0]);
+                    //     }
+                    // }
+                    Upgrader.run(creep);
+                }
+            }
+        }
+        else {
+            let exit = creep.room.findExitTo(creep.memory.homeRoom);
+            creep.moveTo(creep.pos.findClosestByRange(exit));
+        }
+    }
+};
+
+const CenterCreep = {
+    run: function (creep) {
+        if (!(creep.pos.isEqualTo(new RoomPosition(12, 18, "E35S47")))) {
+            creep.moveTo(new RoomPosition(12, 18, "E35S47"));
+        }
+        else {
+            var terminal = creep.room.terminal;
+            var storage = creep.room.storage;
+            var link = Game.getObjectById('61a3f58732b74f02f5a76f1a');
+            if (link.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+                creep.withdraw(link, RESOURCE_ENERGY);
+                creep.transfer(storage, RESOURCE_ENERGY);
+            }
+            // else if (terminal.store.getUsedCapacity() > 0){
+            //     for (const resourceType in terminal.store){
+            //         creep.withdraw(terminal,resourceType as ResourceConstant);
+            //         creep.transfer(storage,resourceType as ResourceConstant);
+            //     }
+            // }
+            // let fittedOrder = Game.market.getAllOrders((order)=> order.type == ORDER_BUY && order.resourceType == RESOURCE_ENERGY
+            // && Game.market.calcTransactionCost)
+            //if (storage.store[RESOURCE_ENERGY] > 200000)
+            // Game.market.createOrder({type:ORDER_SELL,resourceType: RESOURCE_ENERGY,price:700000,totalAmount: 1,roomName:'E35S47'})
+            let order = Game.market.getOrderById('61bcbef7e30181cb81a9b5c2');
+            if (order) {
+                let cost = Game.market.calcTransactionCost(order.amount, 'E35S47', order.roomName);
+                if (terminal.store[RESOURCE_ENERGY] < order.amount + cost) {
+                    creep.withdraw(storage, RESOURCE_ENERGY);
+                    creep.transfer(terminal, RESOURCE_ENERGY);
+                }
+                else {
+                    console.log(Game.market.deal(order.id, order.amount, "E35S47"));
+                }
+            }
+            else {
+                for (const resourceType in creep.store) {
+                    creep.transfer(storage, resourceType);
+                }
+            }
+        }
+    }
+};
+
+const RoomClaimer = {
+    run: function (creep) {
+        let creepPath = creep.memory.path;
+        let pathLength = creepPath.length;
+        let currentPath;
+        if (pathLength > 0) {
+            currentPath = creepPath[0];
+            if (creep.room.name != currentPath) {
+                let exit = creep.room.findExitTo(currentPath);
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+                creep.heal(creep);
+            }
+            else {
+                creepPath.shift();
+            }
+        }
+        else {
+            if (creep.room.name == creep.memory.path[0]) {
+                if (creep.claimController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.controller);
+                    creep.heal(creep);
+                }
+            }
+        }
+    }
+};
+///['E36S47','E37S47','E37S46','E38S46','E39S46','E39S47']
+
+//删
+const crossRoomBuilder = {
+    /** @param {Creep} creep **/
+    run: function (creep) {
+        if (creep.room.name == "E39S47") {
+            if (creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+                creep.memory.working = false;
+            }
+            if (!creep.memory.working && creep.store.getFreeCapacity() == 0) {
+                creep.memory.working = true;
+            }
+            if (creep.memory.working) {
+                var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+                if (targets.length) {
+                    if (creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(targets[0], { visualizePathStyle: { stroke: '#ffffff' } });
+                    }
+                }
+                // if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE){
+                //     creep.moveTo(creep.room.controller)
+                // }
+            }
+            else {
+                if (creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), { visualizePathStyle: { stroke: '#ffaa00' } });
+                }
+            }
+        }
+        else {
+            if (creep.room.name == "E35S47") {
+                let exit = creep.room.findExitTo('E36S47');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E36S47") {
+                let exit = creep.room.findExitTo('E36S48');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E36S48") {
+                let exit = creep.room.findExitTo('E36S49');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E36S49") {
+                let exit = creep.room.findExitTo('E37S49');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E37S49") {
+                let exit = creep.room.findExitTo('E37S50');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E37S50") {
+                let exit = creep.room.findExitTo('E38S50');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E38S50") {
+                let exit = creep.room.findExitTo('E39S50');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E39S50") {
+                let exit = creep.room.findExitTo('E40S50');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E40S50") {
+                let exit = creep.room.findExitTo('E40S49');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E40S49") {
+                let exit = creep.room.findExitTo('E40S48');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E40S48") {
+                let exit = creep.room.findExitTo('E40S47');
+                creep.moveTo(creep.pos.findClosestByRange(exit));
+            }
+            else if (creep.room.name == "E40S47") {
+                creep.moveTo(new RoomPosition(15, 16, 'E39S47'));
+            }
+        }
+    }
+};
+// Game.spawns['Spawn1'].spawnCreep([MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,MOVE,WORK,WORK,WORK,WORK,WORK,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"冲！",{memory:{role:"crossRoomBuilder"}})
+
+//删
+const crossRoomAttacker = {
+    run: function (creep) {
+        // if (creep.room.name == creep.memory.targetRoom){
+        if (creep.attack(Game.getObjectById('614d28a28b0a09db61bc812e')) == ERR_NOT_IN_RANGE) {
+            creep.moveTo(Game.getObjectById('614d28a28b0a09db61bc812e'));
+        }
+        // }
+        // else{
+        //let exit = creep.room.findExitTo('E39S47') as FindConstant;
+        // creep.moveTo(new RoomPosition(15,16,'E39S47'));
+    }
+    // }
+};
+
+/*
+ts版本
+
+creep对穿+跨房间寻路+寻路缓存 
+跑的比香港记者还快从你做起
+应用此模块会导致creep.moveTo可选参数中这些项失效：reusePath、serializeMemory、noPathFinding、ignore、avoid、serialize
+保留creep.moveTo中其他全部可选参数如visualizePathStyle、range、ignoreDestructibleStructures、ignoreCreeps、ignoreRoad等
+新增creep.moveTo中可选参数ignoreSwamps，会无视swamp与road的移动力损耗差异，一律与plain相同处理，用于方便pc和眼，默认false
+例：creep.moveTo(controller, {ignoreSwamps: true});
+新增creep.moveTo中可选参数bypassHostileCreeps，被creep挡路时若此项为true则绕过别人的creep，默认为true，设为false用于近战攻击
+例：creep.moveTo(controller, {bypassHostileCreeps: false});
+新增creep.moveTo中可选参数bypassRange，被creep挡路准备绕路时的绕路半径，默认为5
+例：creep.moveTo(controller, {bypassRange: 10});
+新增creep.moveTo中可选参数noPathDelay，寻得的路是不完全路径时的再次寻路延迟，默认为10
+例：creep.moveTo(controller, {noPathDelay: 5});
+新增返回值ERR_INVALID_ARGS，表示range或者bypassRange类型错误
+
+遇到己方creep自动进行对穿，遇到自己设置了不想被对穿的creep（或bypassHostileCreeps设为true时遇到他人creep）会自动绕过
+会将新手墙和部署中的invaderCore处理为无法通过
+会绕过非终点的portal，不影响creep.moveTo(portal)
+不使用Memory及global，不会因此干扰外部代码
+不会在Creep.prototype、PowerCreep.prototype上增加官方未有的键值，不会因此干扰外部代码
+本模块不可用于sim，在sim会因为房间名格式不对返回ERR_INVALID_TARGET
+模块参数见代码头部，模块接口见代码尾部
+版本号规则：alpha test = 0.1.x，beta test = 0.9.x，publish >= 1.0.0
+
+author: Scorpior
+debug helpers: fangxm, czc
+inspired by: Yuandiaodiaodiao
+date: 2020/3/30
+version: 0.9.4(beta test)
+
+Usage:
+import "./超级移动优化"
+
+
+changelog:
+0.1.0:  maybe not runnable
+0.1.1： still maybe not runnable，修了一些typo，完成正向移动，修改isObstacleStructure
+0.1.2： maybe runnable，some bugs are fixed
+0.1.3:  修正工地位置寻路错误，调整打印格式
+0.1.4:  补充pc对穿，打印中增加cache hits统计
+0.9.0:  启用自动清理缓存，保留ignoreCreeps参数，调整对穿顺序+增加在storage附近检查对穿，
+        正确识别敌对rampart，正确查询带range路径，打印中增加对穿频率统计
+0.9.1:  增加正常逻辑开销统计，修改cache搜索开销统计为cache miss开销统计，绕路bugfix，跨房检测bugfix，other bugfix
+0.9.2:  修改缓存策略减少查找耗时增加命中率，增加核心区对穿次数统计，对穿bugfix，other bugfix
+0.9.3： 取消路径反向复用避免偶发的复用非最优路径的情况，改进识别被新手墙封闭的房间，增加avoidRooms设置，
+        增加远距离跨房寻路成功率，房间出口处对穿bug fix
+0.9.4:  优化路径复用避免偶发的复用非最优路径的情况，删除运行时参数中neutralCostMatrixClearDelay，
+        自动根据挡路建筑情况设置中立房间costMatrix过期时间，增加ob寻路（检查房间是否可走），
+        提供deletePathInRoom接口（使用方式见下方ps），print()中增加平均每次查找缓存时检查的路径数量统计，
+        findRoute遇到过道新手墙时bugfix，偏移路径bugfix
+0.9.5： TODO：ignoreSwamp避开路，提供deletePathFromRoom、deletePathToRoom接口，增加自动visual，betterMove
+0.9.6 :Sokranotes： 修改为ts版本
+
+
+ps:
+1.默认ignoreCreeps为true，主动设置ignoreCreeps为false会在撞到creep时重新寻路
+2.对于不想被对穿的creep（比如没有脚的中央搬运工）, 设置memory：
+creep.memory.dontPullMe = true;
+3.修路后希望手动更新房间内路径，可执行如下代码：
+require('超级移动优化').deletePathInRoom(roomName);
+4.战斗中遇到敌方pc不断产生新rampart挡路的情况，目前是撞上建筑物才重新寻路（原版moveTo撞上也继续撞），如果觉得需要手动提前激活重新寻路则联系我讨论
+5.在控制台输入require('超级移动优化').print()获取性能信息，鼓励发给作者用于优化
+*/
+// 运行时参数 
+let pathClearDelay = 5000;  // 清理相应时间内都未被再次使用的路径，同时清理死亡creep的缓存，设为undefined表示不清除缓存
+let hostileCostMatrixClearDelay = 500; // 自动清理相应时间前创建的其他玩家房间的costMatrix
+let coreLayoutRange = 3; // 核心布局半径，在离storage这个范围内频繁检查对穿（减少堵路的等待
+// let avoidRooms = ['E18S8', 'E19S9', 'E21S9', 'E24S8', 'E35N6', 'E25S9',
+//     'E19N2', 'E18N3', 'E29N5', 'E29N3', 'E28N8', 'E33N9', 'E34N8',
+//     'E37N6', 'E41N8', 'E39N11', 'E39N12', 'E39N13', 'E17S9']      // 永不踏入这些房间
+let avoidRooms = [];      // 永不踏入这些房间
+/** @type {{id:string, roomName:string, taskQueue:{path:MyPath, idx:number, roomName:string}[]}[]} */
+// let observers = ['5e3646219c6dc78024fd7097', '5e55e9b8673548d9468a2d3d', '5e36372d00fab883d281d95e'];  // 如果想用ob寻路，把ob的id放这里
+let observers = [];  // 如果想用ob寻路，把ob的id放这里
+/***************************************
+ *  局部缓存
+ */
+/** @type {{ [time: number]:{path:MyPath, idx:number, roomName:string}[] }} */
+let obTimer = {};   // 【未启用】用于登记ob调用，在相应的tick查看房间对象
+let obTick = Game.time;
+/** @type {Paths} */
+let globalPathCache = {};     // 缓存path
+/** @type {MoveTimer} */
+let pathCacheTimer = {}; // 用于记录path被使用的时间，清理长期未被使用的path
+/** @type {CreepPaths} */
+let creepPathCache = {};    // 缓存每个creep使用path的情况
+let creepMoveCache = {};    // 缓存每个creep最后一次移动的tick
+let emptyCostMatrix = new PathFinder.CostMatrix;
+/** @type {CMs} */
+let costMatrixCache = {};    // true存ignoreDestructibleStructures==true的，false同理
+/** @type {{ [time: number]:{roomName:string, avoids:string[]}[] }} */
+let costMatrixCacheTimer = {}; // 用于记录costMatrix的创建时间，清理过期costMatrix
+let autoClearTick = Game.time;  // 用于避免重复清理缓存
+
+const obstacles = new Set(OBSTACLE_OBJECT_TYPES);
+const originMove = Creep.prototype.move;
+Creep.prototype.moveTo;
+RoomPosition.prototype.findClosestByPath;
+
+// 统计变量
+let startTime;
+let endTime;
+let startCacheSearch;
+let analyzeCPU = { // 统计相关函数总耗时
+    move: { sum: 0, calls: 0 },
+    moveTo: { sum: 0, calls: 0 },
+    findClosestByPath: { sum: 0, calls: 0 }
+};
+let cacheHitCost = 0;
+let cacheMissCost = 0;
+
+/***************************************
+ *  util functions
+ */
+let reg1 = /^([WE])([0-9]+)([NS])([0-9]+)$/;    // parse得到['E28N7','E','28','N','7']
+/**
+ *  统一到大地图坐标，平均单次开销0.00005
+ * @param {RoomPosition} pos 
+ */
+function formalize(pos) {
+    let splited = reg1.exec(pos.roomName);
+    if (splited && splited.length == 5) {
+        return { // 如果这里出现类型错误，那么意味着房间名字不是正确格式但通过了parse，小概率事件
+            x: (splited[1] === 'W' ? -splited[2] : +splited[2] + 1) * 50 + pos.x,
+            y: (splited[3] === 'N' ? -splited[4] : +splited[4] + 1) * 50 + pos.y
+        }
+    } // else 房间名字不是正确格式
+    return {}
+}
+
+/**
+ *  阉割版isEqualTo，提速
+ * @param {RoomPosition} pos1 
+ * @param {RoomPosition} pos2 
+ */
+function isEqual(pos1, pos2) {
+    return pos1.x == pos2.x && pos1.y == pos2.y && pos1.roomName == pos2.roomName;
+}
+
+/**
+ *  兼容房间边界
+ *  参数具有x和y属性就行
+ * @param {RoomPosition} pos1 
+ * @param {RoomPosition} pos2 
+ */
+function isNear(pos1, pos2) {
+    if (pos1.roomName == pos2.roomName) {    // undefined == undefined 也成立
+        return -1 <= pos1.x - pos2.x && pos1.x - pos2.x <= 1 && -1 <= pos1.y - pos2.y && pos1.y - pos2.y <= 1;
+    } else if (pos1.roomName && pos2.roomName) {    // 是完整的RoomPosition
+        if (pos1.x + pos2.x != 49 && pos1.y + pos2.y != 49) return false;    // 肯定不是两个边界点, 0.00003 cpu
+        // start
+        let splited1 = reg1.exec(pos1.roomName);
+        let splited2 = reg1.exec(pos2.roomName);
+        if (splited1 && splited1.length == 5 && splited2 && splited2.length == 5) {
+            // 统一到大地图坐标
+            let formalizedEW = (splited1[1] === 'W' ? -splited1[2] : +splited1[2] + 1) * 50 + pos1.x - (splited2[1] === 'W' ? -splited2[2] : +splited2[2] + 1) * 50 - pos2.x;
+            let formalizedNS = (splited1[3] === 'N' ? -splited1[4] : +splited1[4] + 1) * 50 + pos1.y - (splited2[3] === 'N' ? -splited2[4] : +splited2[4] + 1) * 50 - pos2.y;
+            return -1 <= formalizedEW && formalizedEW <= 1 && -1 <= formalizedNS && formalizedNS <= 1;
+        }
+        // end - start = 0.00077 cpu
+    }
+    return false
+}
+
+/** 
+* @param {RoomPosition} pos1 
+* @param {RoomPosition} pos2 
+*/
+function inRange(pos1, pos2, range) {
+    if (pos1.roomName == pos2.roomName) {
+        return -range <= pos1.x - pos2.x && pos1.x - pos2.x <= range && -range <= pos1.y - pos2.y && pos1.y - pos2.y <= range;
+    } else {
+        pos1 = formalize(pos1);
+        pos2 = formalize(pos2);
+        return pos1.x && pos2.x && inRange(pos1, pos2);
+    }
+}
+
+/**
+ *  fromPos和toPos是pathFinder寻出的路径上的，只可能是同房相邻点或者跨房边界点
+ * @param {RoomPosition} fromPos 
+ * @param {RoomPosition} toPos 
+ */
+function getDirection(fromPos, toPos) {
+    if (fromPos.roomName == toPos.roomName) {
+        if (toPos.x > fromPos.x) {    // 下一步在右边
+            if (toPos.y > fromPos.y) {    // 下一步在下面
+                return BOTTOM_RIGHT;
+            } else if (toPos.y == fromPos.y) { // 下一步在正右
+                return RIGHT;
+            }
+            return TOP_RIGHT;   // 下一步在上面
+        } else if (toPos.x == fromPos.x) { // 横向相等
+            if (toPos.y > fromPos.y) {    // 下一步在下面
+                return BOTTOM;
+            } else if (toPos.y < fromPos.y) {
+                return TOP;
+            }
+        } else {  // 下一步在左边
+            if (toPos.y > fromPos.y) {    // 下一步在下面
+                return BOTTOM_LEFT;
+            } else if (toPos.y == fromPos.y) {
+                return LEFT;
+            }
+            return TOP_LEFT;
+        }
+    } else {  // 房间边界点
+        if (fromPos.x == 0 || fromPos.x == 49) {  // 左右相邻的房间，只需上下移动（左右边界会自动弹过去）
+            if (toPos.y > fromPos.y) {   // 下一步在下面
+                return BOTTOM;
+            } else if (toPos.y < fromPos.y) { // 下一步在上
+                return TOP
+            } // else 正左正右
+            return fromPos.x ? RIGHT : LEFT;
+        } else if (fromPos.y == 0 || fromPos.y == 49) {    // 上下相邻的房间，只需左右移动（上下边界会自动弹过去）
+            if (toPos.x > fromPos.x) {    // 下一步在右边
+                return RIGHT;
+            } else if (toPos.x < fromPos.x) {
+                return LEFT;
+            }// else 正上正下
+            return fromPos.y ? BOTTOM : TOP;
+        }
+    }
+}
+let isHighWay = (roomName) => {
+        // E0 || E10 || E1S0 || [E10S0|E1S10] || [E10S10] 比正则再除快
+        return roomName[1] == 0 || roomName[2] == 0 || roomName[3] == 0 || roomName[4] == 0 || roomName[5] == 0;
+    };
+
+/**
+ *  缓存的路径和当前moveTo参数相同
+ * @param {MyPath} path 
+ * @param {*} ops 
+ */
+function isSameOps(path, ops) {
+    return path.ignoreRoads == !!ops.ignoreRoads &&
+        path.ignoreSwamps == !!ops.ignoreSwamps &&
+        path.ignoreStructures == !!ops.ignoreDestructibleStructures;
+}
+
+function hasActiveBodypart(body, type) {
+    if (!body) {
+        return true;
+    }
+
+    for (var i = body.length - 1; i >= 0; i--) {
+        if (body[i].hits <= 0)
+            break;
+        if (body[i].type === type)
+            return true;
+    }
+
+    return false;
+
+}
+
+function isClosedRampart(structure) {
+    return structure.structureType == STRUCTURE_RAMPART && !structure.my && !structure.isPublic;
+}
+
+/**
+ *  查看是否有挡路建筑
+ * @param {Room} room
+ * @param {RoomPosition} pos 
+ * @param {boolean} ignoreStructures
+ */
+function isObstacleStructure(room, pos, ignoreStructures) {
+    let consSite = room.lookForAt(LOOK_CONSTRUCTION_SITES, pos);
+    if (0 in consSite && consSite[0].my && obstacles.has(consSite[0].structureType)) {  // 工地会挡路
+        return true;
+    }
+    for (let s of room.lookForAt(LOOK_STRUCTURES, pos)) {
+        if (!s.hits || s.ticksToDeploy) {     // 是新手墙或者无敌中的invaderCore
+            return true;
+        } else if (!ignoreStructures && (obstacles.has(s.structureType) || isClosedRampart(s))) {
+            return true
+        }
+    }
+    return false;
+    // let possibleStructures = room.lookForAt(LOOK_STRUCTURES, pos);  // room.lookForAt比pos.lookFor快
+    // 万一有人把路修在extension上，导致需要每个建筑都判断，最多重叠3个建筑（rap+road+其他）
+    // return obstacles.has(possibleStructures[0]) || obstacles.has(possibleStructures[1]) || obstacles.has(possibleStructures[2]);    // 条件判断平均每次0.00013cpu
+}
+
+/**
+ *  登记ob需求
+ * @param {MyPath} path 
+ * @param {number} idx 
+ */
+function addObTask(path, idx) {
+    let roomName = path.posArray[idx].roomName;
+    //console.log('准备ob ' + roomName);
+    for (let obData of observers) {
+        if (Game.map.getRoomLinearDistance(obData.roomName, roomName) <= 10) {
+            obData.taskQueue.push({ path: path, idx: idx, roomName: roomName });
+            break;
+        }
+    }
+}
+
+/**
+ *  尝试用ob检查路径
+ */
+function doObTask() {
+    for (let obData of observers) { // 遍历所有ob
+        let queue = obData.taskQueue;
+        while (queue.length) {  // 没有task就pass
+            let task = queue[queue.length - 1];
+            let roomName = task.roomName;
+            if (roomName in costMatrixCache) {  // 有过视野不用再ob
+                if (!task.path.directionArray[task.idx]) {
+                    //console.log(roomName + ' 有视野了无需ob');
+                    checkRoom({ name: roomName }, task.path, task.idx - 1);
+                }
+                queue.pop();
+                continue;
+            }
+            /** @type {StructureObserver} */
+            let ob = Game.getObjectById(obData.id);
+            if (ob) {
+                //console.log('ob ' + roomName);
+                ob.observeRoom(roomName);
+                if (!(Game.time + 1 in obTimer)) {
+                    obTimer[Game.time + 1] = [];
+                }
+                obTimer[Game.time + 1].push({ path: task.path, idx: task.idx, roomName: roomName });    // idx位置无direction
+            } else {
+                observers.splice(observers.indexOf(obData), 1);
+            }
+            break;
+        }
+    }
+}
+
+/**
+ *  查看ob得到的房间
+ */
+function checkObResult() {
+    for (let tick in obTimer) {
+        if (tick < Game.time) {
+            delete obTimer[tick];
+            continue;   // 后面可能还有要检查的
+        } else if (tick == Game.time) {
+            for (let result of obTimer[tick]) {
+                if (result.roomName in Game.rooms) {
+                    //console.log('ob得到 ' + result.roomName);
+                    checkRoom(Game.rooms[result.roomName], result.path, result.idx - 1);    // checkRoom要传有direction的idx
+                }
+            }
+            delete obTimer[tick];
+        } // else 没有要检查的
+        break;  // 检查完了或者没有要检查的
+    }
+}
+
+/**
+ *  为房间保存costMatrix，ignoreDestructibleStructures这个参数的两种情况各需要一个costMatrix
+ *  设置costMatrix缓存的过期时间
+ * @param {Room} room 
+ * @param {RoomPosition} pos
+ */
+function generateCostMatrix(room, pos) {
+    let noStructureCostMat = new PathFinder.CostMatrix; // 不考虑可破坏的建筑，但是要考虑墙上资源点和无敌的3种建筑，可能还有其他不能走的？
+    let structureCostMat = new PathFinder.CostMatrix;   // 在noStructrue的基础上加上所有不可行走的建筑
+    let totalStructures = room.find(FIND_STRUCTURES);
+    let 修路也没用的墙点 = [].concat(room.find(FIND_SOURCES), room.find(FIND_MINERALS), room.find(FIND_DEPOSITS));
+    let x, y, noviceWall, deployingCore, centralPortal;
+    let clearDelay = Infinity;
+    for (let object of 修路也没用的墙点) {
+        x = object.pos.x; y = object.pos.y;
+        noStructureCostMat.set(x, y, 255);
+    }
+    if (room.controller && (room.controller.my || room.controller.safeMode)) {  // 自己的工地不能踩
+        for (let consSite of room.find(FIND_CONSTRUCTION_SITES)) {
+            if (obstacles.has(consSite.structureType)) {
+                x = consSite.pos.x; y = consSite.pos.y;
+                noStructureCostMat.set(x, y, 255);
+                structureCostMat.set(x, y, 255);
+            }
+        }
+    }
+    for (let s of totalStructures) {
+        if (s.structureType == STRUCTURE_INVADER_CORE) {  // 第1种可能无敌的建筑
+            if (s.ticksToDeploy) {
+                deployingCore = true;
+                clearDelay = clearDelay > s.ticksToDeploy ? s.ticksToDeploy : clearDelay;
+                noStructureCostMat.set(s.pos.x, s.pos.y, 255);
+            }
+            structureCostMat.set(s.pos.x, s.pos.y, 255);
+        } else if (s.structureType == STRUCTURE_PORTAL) {  // 第2种无敌建筑
+            if (!isHighWay(room.name)) {
+                centralPortal = true;
+                clearDelay = clearDelay > s.ticksToDecay ? s.ticksToDecay : clearDelay;
+            }
+            x = s.pos.x; y = s.pos.y;
+            structureCostMat.set(x, y, 255);
+            noStructureCostMat.set(x, y, 255);
+        } else if (s.structureType == STRUCTURE_WALL) {    // 第3种可能无敌的建筑
+            if (!s.hits) {
+                noviceWall = true;
+                noStructureCostMat.set(s.pos.x, s.pos.y, 255);
+            }
+            structureCostMat.set(s.pos.x, s.pos.y, 255);
+        } else if (s.structureType == STRUCTURE_ROAD) {    // 路的移动力损耗是1，此处设置能寻到墙上的路
+            x = s.pos.x; y = s.pos.y;
+            if (noStructureCostMat.get(x, y) == 0) {  // 不是在3种无敌建筑或墙中资源上
+                noStructureCostMat.set(x, y, 1);
+                if (structureCostMat.get(x, y) == 0) {     // 不是在不可行走的建筑上
+                    structureCostMat.set(x, y, 1);
+                }
+            }
+        } else if (obstacles.has(s.structureType) || isClosedRampart(s)) {   // HELP：有没有遗漏其他应该设置 noStructureCostMat 的点
+            structureCostMat.set(s.pos.x, s.pos.y, 255);
+        }
+    }
+
+    costMatrixCache[room.name] = {
+        roomName: room.name,
+        true: noStructureCostMat,   // 对应 ignoreDestructibleStructures = true
+        false: structureCostMat     // 对应 ignoreDestructibleStructures = false
+    };
+
+    let avoids = [];
+    if (room.controller && room.controller.owner && !room.controller.my && hostileCostMatrixClearDelay) {  // 他人房间，删除costMat才能更新被拆的建筑位置
+        if (!(Game.time + hostileCostMatrixClearDelay in costMatrixCacheTimer)) {
+            costMatrixCacheTimer[Game.time + hostileCostMatrixClearDelay] = [];
+        }
+        costMatrixCacheTimer[Game.time + hostileCostMatrixClearDelay].push({
+            roomName: room.name,
+            avoids: avoids
+        });   // 记录清理时间
+    } else if (noviceWall || deployingCore || centralPortal) { // 如果遇到可能消失的挡路建筑，这3种情况下clearDelay才可能被赋值为非Infinity
+        if (noviceWall) {    // 如果看见新手墙
+            let neighbors = Game.map.describeExits(room.name);
+            for (let direction in neighbors) {
+                let status = Game.map.getRoomStatus(neighbors[direction]);
+                if (status.status == 'closed') {
+                    avoidRooms[neighbors[direction]] = 1;
+                } else if (status.status != 'normal' && status.timestamp != null) {
+                    let estimateTickToChange = (status.timestamp - new Date().getTime()) / 10000; // 10s per tick
+                    clearDelay = clearDelay > estimateTickToChange ? Math.ceil(estimateTickToChange) : clearDelay;
+                }
+            }
+            if (pos) {  // 如果知道自己的pos
+                for (let direction in neighbors) {
+                    if (!(neighbors[direction] in avoidRooms)) {
+                        let exits = room.find(+direction);
+                        if (PathFinder.search(pos, exits, { maxRooms: 1, roomCallback: () => noStructureCostMat }).incomplete) {    // 此路不通
+                            avoidRooms[neighbors[direction]] = 1;
+                            avoids.push(neighbors[direction]);
+                        }
+                    }
+                }
+            }
+        }
+        //console.log(room.name + ' costMat 设置清理 ' + clearDelay);
+        if (!(Game.time + clearDelay in costMatrixCacheTimer)) {
+            costMatrixCacheTimer[Game.time + clearDelay] = [];
+        }
+        costMatrixCacheTimer[Game.time + clearDelay].push({
+            roomName: room.name,
+            avoids: avoids  // 因新手墙导致的avoidRooms需要更新
+        });   // 记录清理时间
+    }
+    //console.log('生成costMat ' + room.name);
+
+}
+
+/**
+ *  把路径上有视野的位置的正向移动方向拿到，只有在找新路时调用，找新路时会把有视野房间都缓存进costMatrixCache
+ * @param {MyPath} path 
+ */
+function generateDirectionArray(path) {
+    let posArray = path.posArray;
+    let directionArray = new Array(posArray.length);
+    let incomplete = false;
+    for (let idx = 1; idx in posArray; idx++) {
+        if (posArray[idx - 1].roomName in costMatrixCache) {    // 有costMat，是准确路径，否则需要在有视野时checkRoom()
+            directionArray[idx] = getDirection(posArray[idx - 1], posArray[idx]);
+        } else if (!incomplete) {   // 记录第一个缺失准确路径的位置
+            incomplete = idx;
+        }
+    }
+    if (observers.length && incomplete) {
+        addObTask(path, incomplete); // 这格没有direction
+    }
+    path.directionArray = directionArray;
+}
+
+/**
+ *  第一次拿到该room视野，startIdx是新房中唯一有direction的位置
+ * @param {Room} room 
+ * @param {MyPath} path 
+ * @param {number} startIdx 
+ */
+function checkRoom(room, path, startIdx) {
+    if (!(room.name in costMatrixCache)) {
+        generateCostMatrix(room, path.posArray[startIdx]);
+    }
+    let thisRoomName = room.name;
+    /** @type {CostMatrix} */
+    let costMat = costMatrixCache[thisRoomName][path.ignoreStructures];
+    let posArray = path.posArray;
+    let directionArray = path.directionArray;
+    let i;
+    for (i = startIdx; i + 1 in posArray && posArray[i].roomName == thisRoomName; i++) {
+        if (costMat.get(posArray[i].x, posArray[i].y) == 255) {   // 路上有东西挡路
+            return false;
+        }
+        directionArray[i + 1] = getDirection(posArray[i], posArray[i + 1]);
+    }
+    if (observers.length && i + 1 in posArray) {
+        while (i + 1 in posArray) {
+            if (!directionArray[i + 1]) {
+                addObTask(path, i + 1);     // 这格没有direction
+                break;
+            }
+            i += 1;
+        }
+    }
+    return true;
+}
+
+/**
+ *  尝试对穿，有2种不可穿情况
+ * @param {Creep} creep 
+ * @param {RoomPosition} pos  
+ * @param {boolean} bypassHostileCreeps
+ */
+function trySwap(creep, pos, bypassHostileCreeps, ignoreCreeps) {     // ERR_NOT_FOUND开销0.00063，否则开销0.0066
+    let obstacleCreeps = creep.room.lookForAt(LOOK_CREEPS, pos).concat(creep.room.lookForAt(LOOK_POWER_CREEPS, pos));
+    if (obstacleCreeps.length) {
+        if (!ignoreCreeps) {
+            return ERR_INVALID_TARGET;
+        }
+        for (let c of obstacleCreeps) {
+            if (c.my) {
+                if (c.memory.dontPullMe) {    // 第1种不可穿情况：挡路的creep设置了不对穿
+                    return ERR_INVALID_TARGET;
+                }
+                if (creepMoveCache[c.name] != Game.time && originMove.call(c, getDirection(pos, creep.pos)) == ERR_NO_BODYPART && creep.pull) {
+                    creep.pull(c);
+                    originMove.call(c, creep);
+                }
+            } else if (bypassHostileCreeps && (!c.room.controller || !c.room.controller.my || !c.room.controller.safeMode)) {  // 第二种不可穿情况：希望绕过敌对creep
+                return ERR_INVALID_TARGET;
+            }
+        }
+        return OK;    // 或者全部操作成功
+    }
+    return ERR_NOT_FOUND // 没有creep
+}
+
+let temporalAvoidFrom, temporalAvoidTo;
+function routeCallback(nextRoomName, fromRoomName) {    // 避开avoidRooms设置了的
+    if (nextRoomName in avoidRooms) {
+        //console.log('Infinity at ' + nextRoomName);
+        return Infinity;
+    }
+    return isHighWay(nextRoomName) ? 1 : 1.15;
+}
+function bypassRouteCallback(nextRoomName, fromRoomName) {
+    if (fromRoomName == temporalAvoidFrom && nextRoomName == temporalAvoidTo) {
+        //console.log(`Infinity from ${fromRoomName} to ${nextRoomName}`);
+        return Infinity;
+    }
+    return routeCallback(nextRoomName);
+}
+/**
+ *  遇到跨房寻路，先以房间为单位寻route，再寻精细的path
+ * @param {string} fromRoomName 
+ * @param {string} toRoomName 
+ * @param {boolean} bypass
+ */
+function findRoute(fromRoomName, toRoomName, bypass) {  // TODO 以后跨shard寻路也放在这个函数里
+    //console.log('findRoute', fromRoomName, toRoomName, bypass);
+    return Game.map.findRoute(fromRoomName, toRoomName, { routeCallback: bypass ? bypassRouteCallback : routeCallback });
+}
+
+/**
+ * @param {RoomPosition} pos
+ * @param {Room} room 
+ * @param {CostMatrix} costMat 
+ */
+function checkTemporalAvoidExit(pos, room, costMat) {    // 用于记录因creep堵路导致的房间出口临时封闭
+    let neighbors = Game.map.describeExits(room.name);
+    temporalAvoidFrom = temporalAvoidTo = '';   // 清空旧数据
+    for (let direction in neighbors) {
+        if (!(neighbors[direction] in avoidRooms)) {
+            for (let direction in neighbors) {
+                let exits = room.find(+direction);
+                if (PathFinder.search(pos, exits, {
+                    maxRooms: 1,
+                    roomCallback: () => costMat
+                }).incomplete) {    // 此路不通
+                    temporalAvoidFrom = room.name;
+                    temporalAvoidTo = neighbors[direction];
+                }
+            }
+        }
+    }
+}
+function routeReduce(temp, item) {
+    temp[item.room] = 1;
+    return temp;
+}
+function bypassHostile(creep) {
+    return !creep.my || creep.memory.dontPullMe;
+}
+function bypassMy(creep) {
+    return creep.my && creep.memory.dontPullMe;
+}
+let bypassRoomName, bypassCostMat, bypassIgnoreCondition, userCostCallback, costMat, route;
+function bypassRoomCallback(roomName) {
+    if (roomName in avoidRooms) {
+        return false;
+    }
+    if (roomName == bypassRoomName) {     // 在findTemporalRoute函数里刚刚建立了costMatrix
+        costMat = bypassCostMat;
+    } else {
+        costMat = roomName in costMatrixCache ? costMatrixCache[roomName][findPathIgnoreCondition] : emptyCostMatrix;
+    }
+
+    if (userCostCallback) {
+        let resultCostMat = userCostCallback(roomName, roomName in costMatrixCache ? costMat.clone() : new PathFinder.CostMatrix);
+        if (resultCostMat instanceof PathFinder.CostMatrix) {
+            costMat = resultCostMat;
+        }
+    }
+    return costMat;
+}
+function bypassRoomCallbackWithRoute(roomName) {
+    if (roomName in route) {
+        if (roomName == bypassRoomName) {     // 在findTemporalRoute函数里刚刚建立了costMatrix
+            costMat = bypassCostMat;
+        } else {
+            costMat = roomName in costMatrixCache ? costMatrixCache[roomName][findPathIgnoreCondition] : emptyCostMatrix;
+        }
+
+        if (userCostCallback) {
+            let resultCostMat = userCostCallback(roomName, roomName in costMatrixCache ? costMat.clone() : new PathFinder.CostMatrix);
+            if (resultCostMat instanceof PathFinder.CostMatrix) {
+                costMat = resultCostMat;
+            }
+        }
+        return costMat;
+    }
+    return false;
+}
+/**
+ *  影响参数：bypassHostileCreeps, ignoreRoads, ignoreDestructibleStructures, ignoreSwamps, costCallback, range, bypassRange
+ *  及所有PathFinder参数：plainCost, SwampCost, masOps, maxRooms, maxCost, heuristicWeight
+ * @param {Creep} creep 
+ * @param {RoomPosition} toPos 
+ * @param {MoveToOpts} ops 
+ */
+function findTemporalPath(creep, toPos, ops) {
+    let nearbyCreeps;
+    if (ops.ignoreCreeps) { // 有ignoreCreep，只绕过无法对穿的creep
+        nearbyCreeps = creep.pos.findInRange(FIND_CREEPS, ops.bypassRange, {
+            filter: ops.bypassHostileCreeps ? bypassHostile : bypassMy
+        }).concat(creep.pos.findInRange(FIND_POWER_CREEPS, ops.bypassRange, {
+            filter: ops.bypassHostileCreeps ? bypassHostile : bypassMy
+        }));
+    } else {    // 绕过所有creep
+        nearbyCreeps = creep.pos.findInRange(FIND_CREEPS, ops.bypassRange).concat(
+            creep.pos.findInRange(FIND_POWER_CREEPS, ops.bypassRange)
+        );
+    }
+    if (!(creep.room.name in costMatrixCache)) { // 这个房间的costMatrix已经被删了
+        generateCostMatrix(creep.room, creep.pos);
+    }
+    bypassIgnoreCondition = !!ops.ignoreDestructibleStructures;
+    /** @type {CostMatrix} */
+    bypassCostMat = costMatrixCache[creep.room.name][bypassIgnoreCondition].clone();
+    for (let c of nearbyCreeps) {
+        bypassCostMat.set(c.pos.x, c.pos.y, 255);
+    }
+    bypassRoomName = creep.room.name;
+    userCostCallback = typeof ops.costCallback == 'function' ? ops.costCallback : undefined;
+
+    /**@type {PathFinderOpts} */
+    let PathFinderOpts = {
+        maxRooms: ops.maxRooms,
+        maxCost: ops.maxCost,
+        heuristicWeight: ops.heuristicWeight || 1.2
+    };
+    if (ops.ignoreSwamps) {   // HELP 这里有没有什么不增加计算量的简短写法
+        PathFinderOpts.plainCost = ops.plainCost;
+        PathFinderOpts.swampCost = ops.swampCost || 1;
+    } else if (ops.ignoreRoads) {
+        PathFinderOpts.plainCost = ops.plainCost;
+        PathFinderOpts.swampCost = ops.swampCost || 5;
+    } else {
+        PathFinderOpts.plainCost = ops.plainCost || 2;
+        PathFinderOpts.swampCost = ops.swampCost || 10;
+    }
+
+    if (creep.pos.roomName != toPos.roomName) { // findRoute会导致非最优path的问题
+        checkTemporalAvoidExit(creep.pos, creep.room, bypassCostMat);   // 因为creep挡路导致的无法通行的出口
+        route = findRoute(creep.pos.roomName, toPos.roomName, true);
+        if (route == ERR_NO_PATH) {
+            return false;
+        }
+        PathFinderOpts.maxRooms = PathFinderOpts.maxRooms || route.length + 1;
+        PathFinderOpts.maxOps = ops.maxOps || 2000 + route.length ** 2 * 100;  // 跨10room则有2000+10*10*100=12000
+        route = route.reduce(routeReduce, { [creep.pos.roomName]: 1 });     // 因为 key in Object 比 Array.includes(value) 快，但不知道值不值得reduce
+        PathFinderOpts.roomCallback = bypassRoomCallbackWithRoute;
+    } else {
+        PathFinderOpts.maxOps = ops.maxOps;
+        PathFinderOpts.roomCallback = bypassRoomCallback;
+    }
+
+    let result = PathFinder.search(creep.pos, { pos: toPos, range: ops.range }, PathFinderOpts).path;
+    if (result.length) {
+        let creepCache = creepPathCache[creep.name];
+        creepCache.path = {     // 弄个新的自己走，不修改公用的缓存路，只会用于正向走所以也不需要start属性，idx属性会在startRoute中设置
+            end: formalize(result[result.length - 1]),
+            posArray: result,
+            ignoreStructures: !!ops.ignoreDestructibleStructures
+        };
+        generateDirectionArray(creepCache.path);
+        return true;
+    }
+    return false;
+}
+
+let findPathIgnoreCondition;
+/**
+ * @param {{[roomName:string]:1}} temp 
+ * @param {{room:string}} item 
+ * @returns {{[roomName:string]:1}}
+ */
+function roomCallback(roomName) {
+    if (roomName in avoidRooms) {
+        return false;
+    }
+
+    costMat = roomName in costMatrixCache ? costMatrixCache[roomName][findPathIgnoreCondition] : emptyCostMatrix;
+    if (userCostCallback) {
+        let resultCostMat = userCostCallback(roomName, roomName in costMatrixCache ? costMat.clone() : new PathFinder.CostMatrix);
+        if (resultCostMat instanceof PathFinder.CostMatrix) {
+            costMat = resultCostMat;
+        }
+    }
+    return costMat;
+}
+function roomCallbackWithRoute(roomName) {
+    if (roomName in route) {
+        costMat = roomName in costMatrixCache ? costMatrixCache[roomName][findPathIgnoreCondition] : emptyCostMatrix;
+        //console.log('in route ' + roomName);
+        if (userCostCallback) {
+            let resultCostMat = userCostCallback(roomName, roomName in costMatrixCache ? costMat.clone() : new PathFinder.CostMatrix);
+            if (resultCostMat instanceof PathFinder.CostMatrix) {
+                costMat = resultCostMat;
+            }
+        }
+        return costMat;
+    }
+    //console.log('out route ' + roomName);
+    return false;   // 不在route上的不搜索
+}
+/**
+ *  影响参数：ignoreRoads, ignoreDestructibleStructures, ignoreSwamps, costCallback, range
+ *  及所有PathFinder参数：plainCost, SwampCost, masOps, maxRooms, maxCost, heuristicWeight
+ * @param {RoomPosition} fromPos 
+ * @param {RoomPosition} toPos 
+ * @param {MoveToOpts} ops 
+ */
+function findPath(fromPos, toPos, ops) {
+
+    if (!(fromPos.roomName in costMatrixCache) && fromPos.roomName in Game.rooms) {   // 有视野没costMatrix
+        generateCostMatrix(Game.rooms[fromPos.roomName], fromPos);
+    }
+
+    findPathIgnoreCondition = !!ops.ignoreDestructibleStructures;
+    userCostCallback = typeof ops.costCallback == 'function' ? ops.costCallback : undefined;
+
+    /**@type {PathFinderOpts} */
+    let PathFinderOpts = {
+        maxRooms: ops.maxRooms,
+        maxCost: ops.maxCost,
+        heuristicWeight: ops.heuristicWeight || 1.2
+    };
+    if (ops.ignoreSwamps) {   // HELP 这里有没有什么不增加计算量的简短写法
+        PathFinderOpts.plainCost = ops.plainCost;
+        PathFinderOpts.swampCost = ops.swampCost || 1;
+    } else if (ops.ignoreRoads) {
+        PathFinderOpts.plainCost = ops.plainCost;
+        PathFinderOpts.swampCost = ops.swampCost || 5;
+    } else {
+        PathFinderOpts.plainCost = ops.plainCost || 2;
+        PathFinderOpts.swampCost = ops.swampCost || 10;
+    }
+
+    if (fromPos.roomName != toPos.roomName) {   // findRoute会导致非最优path的问题
+        route = findRoute(fromPos.roomName, toPos.roomName);
+        if (route == ERR_NO_PATH) {
+            return { path: [] };
+        }
+        PathFinderOpts.maxOps = ops.maxOps || 2000 + route.length ** 2 * 100;  // 跨10room则有2000+10*10*50=7000
+        PathFinderOpts.maxRooms = PathFinderOpts.maxRooms || route.length + 1;
+        route = route.reduce(routeReduce, { [fromPos.roomName]: 1 });   // 因为 key in Object 比 Array.includes(value) 快，但不知道值不值得reduce
+        //console.log(fromPos + ' using route ' + JSON.stringify(route));
+        PathFinderOpts.roomCallback = roomCallbackWithRoute;
+    } else {
+        PathFinderOpts.maxOps = ops.maxOps;
+        PathFinderOpts.roomCallback = roomCallback;
+    }
+
+    return PathFinder.search(fromPos, { pos: toPos, range: ops.range }, PathFinderOpts);
+}
+
+let combinedX, combinedY;
+/**
+ * @param {MyPath} newPath 
+ */
+function addPathIntoCache(newPath) {
+    combinedX = newPath.start.x + newPath.start.y;
+    combinedY = newPath.end.x + newPath.end.y;
+    if (!(combinedX in globalPathCache)) {
+        globalPathCache[combinedX] = {
+            [combinedY]: []  // 数组里放不同ops的及其他start、end与此对称的
+        };
+    } else if (!(combinedY in globalPathCache[combinedX])) {
+        globalPathCache[combinedX][combinedY] = [];      // 数组里放不同ops的及其他start、end与此对称的
+    }
+    globalPathCache[combinedX][combinedY].push(newPath);
+}
+
+function invalidate() {
+    return 0;
+}
+/**
+ * @param {MyPath} path 
+ */
+function deletePath(path) {
+    if (path.start) {     // 有start属性的不是临时路
+        let pathArray = globalPathCache[path.start.x + path.start.y][path.end.x + path.end.y];
+        pathArray.splice(pathArray.indexOf(path), 1);
+        path.posArray = path.posArray.map(invalidate);
+    }
+}
+
+let minX, maxX, minY, maxY;
+/**
+ *  寻找房内缓存路径，起始位置两步限制避免复用非最优路径
+ * @param {RoomPosition} formalFromPos 
+ * @param {RoomPosition} formalToPos
+ * @param {RoomPosition} fromPos
+ * @param {CreepPaths} creepCache 
+ * @param {MoveToOpts} ops 
+ */
+function findShortPathInCache(formalFromPos, formalToPos, fromPos, creepCache, ops) {     // ops.range设置越大找的越慢
+    startCacheSearch = Game.cpu.getUsed();
+    minX = formalFromPos.x + formalFromPos.y - 2;
+    maxX = formalFromPos.x + formalFromPos.y + 2;
+    minY = formalToPos.x + formalToPos.y - 1 - ops.range;
+    maxY = formalToPos.x + formalToPos.y + 1 + ops.range;
+    for (combinedX = minX; combinedX <= maxX; combinedX++) {
+        if (combinedX in globalPathCache) {
+            for (combinedY = minY; combinedY <= maxY; combinedY++) {
+                if (combinedY in globalPathCache[combinedX]) {
+                    for (let path of globalPathCache[combinedX][combinedY]) {     // 这个数组应该会很短
+                        if (isNear(path.start, formalFromPos) && isNear(fromPos, path.posArray[1]) && inRange(path.end, formalToPos, ops.range) && isSameOps(path, ops)) {     // 找到路了
+                            creepCache.path = path;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ *  寻找跨房缓存路径，允许起始位置少量的误差
+ * @param {RoomPosition} formalFromPos
+ * @param {RoomPosition} formalToPos
+ * @param {CreepPaths} creepCache
+ * @param {MoveToOpts} ops
+ */
+function findLongPathInCache(formalFromPos, formalToPos, creepCache, ops) {     // ops.range设置越大找的越慢
+    startCacheSearch = Game.cpu.getUsed();
+    minX = formalFromPos.x + formalFromPos.y - 2;
+    maxX = formalFromPos.x + formalFromPos.y + 2;
+    minY = formalToPos.x + formalToPos.y - 1 - ops.range;
+    maxY = formalToPos.x + formalToPos.y + 1 + ops.range;
+    for (combinedX = minX; combinedX <= maxX; combinedX++) {
+        if (combinedX in globalPathCache) {
+            for (combinedY = minY; combinedY <= maxY; combinedY++) {
+                if (combinedY in globalPathCache[combinedX]) {
+                    for (let path of globalPathCache[combinedX][combinedY]) {     // 这个数组应该会很短
+                        if (isNear(path.start, formalFromPos) && inRange(path.end, formalToPos, ops.range) && isSameOps(path, ops)) {     // 找到路了
+                            creepCache.path = path;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+let startRoomName, endRoomName;
+/**
+ *  起止点都在自己房间的路不清理
+ * @param {CreepPaths['name']} creepCache 
+ */
+function setPathTimer(creepCache) {
+    {
+        let posArray = creepCache.path.posArray;
+        startRoomName = posArray[0].roomName;
+        endRoomName = posArray[posArray.length - 1].roomName;
+        if (startRoomName != endRoomName || (startRoomName in Game.rooms && Game.rooms[startRoomName].controller && !Game.rooms[startRoomName].controller.my)) {    // 跨房路或者敌方房间路
+            if (!(Game.time + pathClearDelay in pathCacheTimer)) {
+                pathCacheTimer[Game.time + pathClearDelay] = [];
+            }
+            pathCacheTimer[Game.time + pathClearDelay].push(creepCache.path);
+            creepCache.path.lastTime = Game.time;
+        }
+    }
+}
+
+/**@type {RoomPosition[]} */
+let tempArray = [];
+/**
+ *  
+ * @param {Creep} creep 
+ * @param {RoomPosition} toPos 
+ * @param {RoomPosition[]} posArray 
+ * @param {number} startIdx 
+ * @param {number} idxStep 
+ * @param {PolyStyle} visualStyle 
+ */
+function showVisual(creep, toPos, posArray, startIdx, idxStep, visualStyle) {
+    tempArray.length = 0;
+    tempArray.push(creep.pos);
+    let thisRoomName = creep.room.name;
+    _.defaults(visualStyle, defaultVisualizePathStyle);
+    for (let i = startIdx; i in posArray && posArray[i].roomName == thisRoomName; i += idxStep) {
+        tempArray.push(posArray[i]);
+    }
+    if (toPos.roomName == thisRoomName) {
+        tempArray.push(toPos);
+    }
+    creep.room.visual.poly(tempArray, visualStyle);
+}
+
+/**
+ *  按缓存路径移动
+ * @param {Creep} creep 
+ * @param {PolyStyle} visualStyle 
+ * @param {RoomPosition} toPos 
+ */
+function moveOneStep(creep, visualStyle, toPos) {
+    let creepCache = creepPathCache[creep.name];
+    if (visualStyle) {
+        showVisual(creep, toPos, creepCache.path.posArray, creepCache.idx, 1, visualStyle);
+    }
+    if (creep.fatigue) {
+        return ERR_TIRED;
+    }
+    creepCache.idx++;
+    creepMoveCache[creep.name] = Game.time;
+    Game.cpu.getUsed() - startTime;
+    //creep.room.visual.circle(creepCache.path.posArray[creepCache.idx]);
+    return originMove.call(creep, creepCache.path.directionArray[creepCache.idx]);
+}
+
+/**
+ * 
+ * @param {Creep} creep 
+ * @param {{
+        path: MyPath,
+        dst: RoomPosition,
+        idx: number
+    }} pathCache 
+ * @param {PolyStyle} visualStyle 
+ * @param {RoomPosition} toPos 
+ * @param {boolean} ignoreCreeps
+ */
+function startRoute(creep, pathCache, visualStyle, toPos, ignoreCreeps) {
+    let posArray = pathCache.path.posArray;
+
+    let idx = 0;
+    while (idx in posArray && isNear(creep.pos, posArray[idx])) {
+        idx += 1;
+    }
+    idx -= 1;
+    pathCache.idx = idx;
+
+    if (visualStyle) {
+        showVisual(creep, toPos, posArray, idx, 1, visualStyle);
+    }
+    creepMoveCache[creep.name] = Game.time;
+
+    let nextStep = posArray[idx];
+    if (ignoreCreeps) {
+        trySwap(creep, nextStep, false, true);
+    }
+    return originMove.call(creep, getDirection(creep.pos, posArray[idx]));
+}
+
+/**
+ * @param {Function} fn 
+ */
+function wrapFn(fn, name) {
+    return function () {
+        startTime = Game.cpu.getUsed();     // 0.0015cpu
+        if (obTick < Game.time) {
+            obTick = Game.time;
+            checkObResult();
+            doObTask();
+        }
+        let code = fn.apply(this, arguments);
+        endTime = Game.cpu.getUsed();
+        if (endTime - startTime >= 0.2) {
+            analyzeCPU[name].sum += endTime - startTime;
+            analyzeCPU[name].calls++;
+        }
+        return code;
+    }
+}
+
+function clearUnused() {
+    if (Game.time % pathClearDelay == 0) { // 随机清一次已死亡creep
+        for (let name in creepPathCache) {
+            if (!(name in Game.creeps)) {
+                delete creepPathCache[name];
+            }
+        }
+    }
+    for (let time in pathCacheTimer) {
+        if (time > Game.time) {
+            break;
+        }
+        //console.log('clear path');
+        for (let path of pathCacheTimer[time]) {
+            if (path.lastTime == time - pathClearDelay) {
+                deletePath(path);
+            }
+        }
+        delete pathCacheTimer[time];
+    }
+    for (let time in costMatrixCacheTimer) {
+        if (time > Game.time) {
+            break;
+        }
+        //console.log('clear costMat');
+        for (let data of costMatrixCacheTimer[time]) {
+            delete costMatrixCache[data.roomName];
+            for (let avoidRoomName of data.avoids) {
+                delete avoidRooms[avoidRoomName];
+            }
+        }
+        delete costMatrixCacheTimer[time];
+    }
+}
+
+/***************************************
+ *  功能实现
+ */
+
+const defaultVisualizePathStyle = { fill: 'transparent', stroke: '#fff', lineStyle: 'dashed', strokeWidth: .15, opacity: .1 };
+/**@type {[MoveToOpts, RoomPosition, CreepPaths['1'], MyPath, number, RoomPosition[], boolean]}
+*/
+let [ops, toPos, creepCache, path, idx, posArray, found] = [];
+/**
+ *  把moveTo重写一遍
+ * @param {Creep} this
+ * @param {number | RoomObject} firstArg 
+ * @param {number | MoveToOpts} secondArg 
+ * @param {MoveToOpts} opts 
+ */
+function betterMoveTo(firstArg, secondArg, opts) {
+    if (!this.my) {
+        return ERR_NOT_OWNER;
+    }
+
+    if (this.spawning) {
+        return ERR_BUSY;
+    }
+
+    if (typeof firstArg == 'object') {
+        toPos = firstArg.pos || firstArg;
+        ops = secondArg || {};
+    } else {
+        toPos = { x: firstArg, y: secondArg, roomName: this.room.name };
+        ops = opts || {};
+    }
+    ops.bypassHostileCreeps = ops.bypassHostileCreeps === undefined || ops.bypassHostileCreeps;    // 设置默认值为true
+    ops.ignoreCreeps = ops.ignoreCreeps === undefined || ops.ignoreCreeps;
+
+    if (typeof toPos.x != "number" || typeof toPos.y != "number") {   // 房名无效或目的坐标不是数字，不合法
+        //this.say('no tar');
+        return ERR_INVALID_TARGET;
+    } else if (inRange(this.pos, toPos, ops.range || 1)) {   // 已到达
+        if (isEqual(toPos, this.pos) || ops.range) {  // 已到达
+            return OK;
+        } // else 走一步
+        if (this.pos.roomName == toPos.roomName && ops.ignoreCreeps) {    // 同房间考虑一下对穿
+            trySwap(this, toPos, false, true);
+        }
+        creepMoveCache[this.name] = Game.time;      // 用于防止自己移动后被误对穿
+        Game.cpu.getUsed() - startTime;
+        return originMove.call(this, getDirection(this.pos, toPos));
+    }
+    ops.range = ops.range || 1;
+
+    if (!hasActiveBodypart(this.body, MOVE)) {
+        return ERR_NO_BODYPART;
+    }
+
+    if (this.fatigue) {
+        if (!ops.visualizePathStyle) {    // 不用画路又走不动，直接return
+            return ERR_TIRED;
+        } // else 要画路，画完再return
+    }
+
+    // HELP：感兴趣的帮我检查这里的核心逻辑orz
+    creepCache = creepPathCache[this.name];
+    if (creepCache) {  // 有缓存
+        path = creepCache.path;
+        idx = creepCache.idx;
+        if (path && idx in path.posArray && path.ignoreStructures == !!ops.ignoreDestructibleStructures) {  // 缓存路条件相同
+            posArray = path.posArray;
+            if (isEqual(toPos, creepCache.dst) || inRange(posArray[posArray.length - 1], toPos, ops.range)) {   // 正向走，目的地没变
+                if (isEqual(this.pos, posArray[idx])) {    // 正常
+                    if ('storage' in this.room && inRange(this.room.storage.pos, this.pos, coreLayoutRange) && ops.ignoreCreeps) {
+                        if (trySwap(this, posArray[idx + 1], false, true) == OK) ;
+                    }
+                    //this.say('正常');
+                    return moveOneStep(this, ops.visualizePathStyle, toPos);
+                } else if (idx + 1 in posArray && idx + 2 in posArray && isEqual(this.pos, posArray[idx + 1])) {  // 跨房了
+                    creepCache.idx++;
+                    if (!path.directionArray[idx + 2]) {  // 第一次见到该房则检查房间
+                        if (checkRoom(this.room, path, creepCache.idx)) {   // 传creep所在位置的idx
+                            //this.say('新房 可走');
+                            //console.log(`${Game.time}: ${this.name} check room ${this.pos.roomName} OK`);
+                            return moveOneStep(this, ops.visualizePathStyle, toPos);  // 路径正确，继续走
+                        }   // else 检查中发现房间里有建筑挡路，重新寻路
+                        //console.log(`${Game.time}: ${this.name} check room ${this.pos.roomName} failed`);
+                        deletePath(path);
+                    } else {
+                        //this.say('这个房间见过了');
+                        return moveOneStep(this, ops.visualizePathStyle, toPos);  // 路径正确，继续走
+                    }
+                } else if (isNear(this.pos, posArray[idx])) {  // 堵路了
+                    let code = trySwap(this, posArray[idx], ops.bypassHostileCreeps, ops.ignoreCreeps);  // 检查挡路creep
+                    if (code == OK) {
+                        let posString = posArray[idx].roomName + '-' + posArray[idx].x + '-' + posArray[idx].y;
+                        if (creepCache.jamPos[0] == posString) {
+                            creepCache.jamPos[1]++;
+                            if (creepCache.jamPos[1] > 3) { // 异常堵路，一律绕行
+                                ops.bypassRange = ops.bypassRange || 5; // 默认值
+                                ops.ignoreCreeps = false;   // 强制绕路
+                                if (typeof ops.bypassRange != "number" || typeof ops.range != 'number') {
+                                    return ERR_INVALID_ARGS;
+                                }
+                                if (findTemporalPath(this, toPos, ops)) { // 有路，creepCache的内容会被这个函数更新
+                                    this.say('强制绕路');
+                                    return startRoute(this, creepCache, ops.visualizePathStyle, toPos, ops.ignoreCreeps);
+                                } else {  // 没路
+                                    //this.say('没路啦');
+                                    return ERR_NO_PATH;
+                                }
+                            }
+                        } else {
+                            creepCache.jamPos = [posString, 1];
+                        }
+                        // 让这个逻辑掉下去，正常对穿
+                    } else if (code == ERR_INVALID_TARGET) {   // 是被设置了不可对穿的creep或者敌对creep挡路，临时绕路
+                        ops.bypassRange = ops.bypassRange || 5; // 默认值
+                        if (typeof ops.bypassRange != "number" || typeof ops.range != 'number') {
+                            return ERR_INVALID_ARGS;
+                        }
+                        if (findTemporalPath(this, toPos, ops)) { // 有路，creepCache的内容会被这个函数更新
+                            //this.say('开始绕路');
+                            return startRoute(this, creepCache, ops.visualizePathStyle, toPos, ops.ignoreCreeps);
+                        } else {  // 没路
+                            //this.say('没路啦');
+                            return ERR_NO_PATH;
+                        }
+                    } else if (code == ERR_NOT_FOUND && isObstacleStructure(this.room, posArray[idx], ops.ignoreDestructibleStructures)) {   // 发现出现新建筑物挡路，删除costMatrix和path缓存，重新寻路
+                        //console.log(`${Game.time}: ${this.name} find obstacles at ${this.pos}`);
+                        delete costMatrixCache[this.pos.roomName];
+                        deletePath(path);
+                    } // else 上tick移动失败但也不是建筑物和creep/pc挡路。有2个情况：1.下一格路本来是穿墙路并碰巧消失了；2.下一格是房间出口，有另一个creep抢路了然后它被传送到隔壁了。不处理第1个情况，按第2个情况对待。
+                    //this.say('对穿' + getDirection(this.pos, posArray[idx]) + '-' + originMove.call(this, getDirection(this.pos, posArray[idx])));
+                    if (ops.visualizePathStyle) {
+                        showVisual(this, toPos, posArray, idx, 1, ops.visualizePathStyle);
+                    }
+                    creepMoveCache[this.name] = Game.time;
+                    return originMove.call(this, getDirection(this.pos, posArray[idx]));  // 有可能是第一步就没走上路or通过略过moveTo的move操作偏离路线，直接call可兼容
+                } else if (idx - 1 >= 0 && isNear(this.pos, posArray[idx - 1])) {  // 因为堵路而被自动传送反向跨房了
+                    //this.say('偏离一格');
+                    if (this.pos.roomName == posArray[idx - 1].roomName && ops.ignoreCreeps) {    // 不是跨房而是偏离，检查对穿
+                        trySwap(this, posArray[idx - 1], false, true);
+                    }
+                    if (ops.visualizePathStyle) {
+                        showVisual(this, toPos, posArray, idx, 1, ops.visualizePathStyle);
+                    }
+                    creepMoveCache[this.name] = Game.time;
+                    return originMove.call(this, getDirection(this.pos, posArray[idx - 1]));    // 同理兼容略过moveTo的move
+                } // else 彻底偏离，重新寻路
+            } // else 目的地变了
+        } // else 缓存中没路或者条件变了
+    } // else 需要重新寻路，先找缓存路，找不到就寻路
+
+    if (!creepCache) {    // 初始化cache
+        creepCache = {
+            dst: { x: NaN, y: NaN },
+            path: undefined,
+            idx: 0,
+            jamPos: []
+        };
+        creepPathCache[this.name] = creepCache;
+    } else {
+        creepCache.path = undefined;
+    }
+
+    if (typeof ops.range != 'number') {
+        return ERR_INVALID_ARGS
+    }
+
+    found = this.pos.roomName == toPos.roomName ? findShortPathInCache(formalize(this.pos), formalize(toPos), this.pos, creepCache, ops) : findLongPathInCache(formalize(this.pos), formalize(toPos), creepCache, ops);
+    if (found) ; else {  // 没找到缓存路
+
+        if (autoClearTick < Game.time) {  // 自动清理
+            autoClearTick = Game.time;
+            clearUnused();
+        }
+
+        let result = findPath(this.pos, toPos, ops);
+        if (!result.path.length || (result.incomplete && result.path.length == 1)) {     // 一步也动不了了
+            //this.say('no path')
+            return ERR_NO_PATH;
+        }
+        result = result.path;
+        result.unshift(this.pos);
+
+        //this.say('start new');
+        let newPath = {
+            start: formalize(result[0]),
+            end: formalize(result[result.length - 1]),
+            posArray: result,
+            ignoreRoads: !!ops.ignoreRoads,
+            ignoreStructures: !!ops.ignoreDestructibleStructures,
+            ignoreSwamps: !!ops.ignoreSwamps
+        };
+        generateDirectionArray(newPath);
+        addPathIntoCache(newPath);
+        //console.log(this, this.pos, 'miss');
+        creepCache.path = newPath;
+    }
+
+    creepCache.dst = toPos;
+    setPathTimer(creepCache);
+
+    found ? cacheHitCost += Game.cpu.getUsed() - startCacheSearch : cacheMissCost += Game.cpu.getUsed() - startCacheSearch;
+
+    return startRoute(this, creepCache, ops.visualizePathStyle, toPos, ops.ignoreCreeps);
+}
+
+/***************************************
+ *  初始化
+ *  Creep.prototype.move()将在v0.9.x版本加入
+ *  ob寻路、自动visual将在v0.9.x或v1.0.x版本加入
+ *  RoomPosition.prototype.findClosestByPath()将在v1.1加入
+ *  Creep.prototype.flee()、RoomPosition.prototype.findSquadPathTo()函数将在v1.1或v1.2加入
+ *  checkSquadPath()有小概率会写
+ */
+avoidRooms = avoidRooms.reduce((temp, roomName) => {
+    temp[roomName] = 1;
+    return temp;
+}, {});
+
+observers = observers.reduce((temp, id) => {
+    let ob = Game.getObjectById(id);
+    if (ob && ob.observeRoom && ob.my) {
+        temp.push({ id, roomName: ob.room.name, taskQueue: [] });
+    }
+    return temp;
+}, []);
+
+// Creep.prototype.move = wrapFn(config.changeMove? betterMove : originMove, 'move');
+Creep.prototype.moveTo = wrapFn(betterMoveTo , 'moveTo');
+
+const Body = {
+    createAverageBody: function (energy) {
+        let numParts = Math.floor(energy / 200);
+        let body = [];
+        for (let i = 0; i < numParts; i++) {
+            body.push(WORK);
+        }
+        for (let i = 0; i < numParts; i++) {
+            body.push(CARRY);
+        }
+        for (let i = 0; i < numParts; i++) {
+            body.push(MOVE);
+        }
+        return body;
+    },
+    createPercentageBody: function (percentageWork, energy) {
+        let workParts = Math.floor(energy * percentageWork / 150);
+        let body = [];
+        for (let i = 0; i < workParts; i++) {
+            body.push(WORK);
+        }
+        energy -= workParts * 150;
+        var carryParts = Math.floor(energy / 100);
+        for (let i = 0; i < carryParts; i++) {
+            body.push(CARRY);
+        }
+        for (let i = 0; i < carryParts + workParts; i++) {
+            body.push(MOVE);
+        }
+        return body;
+    },
+    createSoloBody: function (typeCreep, energy) {
+        let workParts = Math.floor((energy - 250) / 100);
+        let body = [];
+        if (typeCreep == 'work') {
+            for (let i = 0; i < workParts; i++) {
+                body.push(WORK);
+            }
+        }
+        else if (typeCreep == "carry") {
+            for (let i = 0; i < workParts; i++) {
+                body.push(CARRY);
+            }
+        }
+        for (let i = 0; i < 5; i++) {
+            body.push(MOVE);
+        }
+        return body;
+    },
+    createMoveCarryBody: function (energy) {
+        let body = [];
+        let number = Math.floor((energy - 150) / 3 / 50);
+        for (let i = 0; i < number; i++) {
+            body.push(CARRY);
+            body.push(CARRY);
+            body.push(MOVE);
+        }
+        body.push(WORK);
+        body.push(MOVE);
+        return body;
     }
 };
 
@@ -3968,7 +5698,7 @@ const RandomName = {
             "睿锦", "易泽", "俊康", "家文", "晨元", "语洋", "裕宏", "梓榛", "阳嘉", "恒展", 
             "雨远", "哲伊", "逸江", "丰源", "学东", "奇岩", "浩财", "和蔼", "红言", "瑞赫", 
             "森圆", "欣赢", "梓鸿", "博明", "铭育", "颢硕", "宇烯", "宇如", "淳炎", "源承", 
-            "斌彬", "飞沉", "鸿璐", "昊弘"
+            "斌彬", "飞沉", "鸿璐", "昊弘","幂","诗诗"
         );
          
          
@@ -3985,57 +5715,6 @@ const RandomName = {
     
 };
 
-const Body = {
-    createAverageBody: function (energy) {
-        var numParts = Math.floor(energy / 200);
-        var body = [];
-        for (let i = 0; i < numParts; i++) {
-            body.push(WORK);
-        }
-        for (let i = 0; i < numParts; i++) {
-            body.push(CARRY);
-        }
-        for (let i = 0; i < numParts; i++) {
-            body.push(MOVE);
-        }
-        return body;
-    },
-    createPercentageBody: function (percentageWork, energy) {
-        var workParts = Math.floor(energy * percentageWork / 150);
-        var body = [];
-        for (let i = 0; i < workParts; i++) {
-            body.push(WORK);
-        }
-        energy -= workParts * 150;
-        var carryParts = Math.floor(energy / 100);
-        for (let i = 0; i < carryParts; i++) {
-            body.push(CARRY);
-        }
-        for (let i = 0; i < carryParts + workParts; i++) {
-            body.push(MOVE);
-        }
-        return body;
-    },
-    createSoloBody: function (typeCreep, energy) {
-        var workParts = Math.floor((energy - 250) / 100);
-        var body = [];
-        if (typeCreep == 'work') {
-            for (let i = 0; i < workParts; i++) {
-                body.push(WORK);
-            }
-        }
-        else if (typeCreep == "carry") {
-            for (let i = 0; i < workParts; i++) {
-                body.push(CARRY);
-            }
-        }
-        for (let i = 0; i < 5; i++) {
-            body.push(MOVE);
-        }
-        return body;
-    }
-};
-
 // To be efficient, you have to mine 3000 energy every 300 ticks.
 const loop = errorMapper(() => {
     // clearing memory
@@ -4048,84 +5727,161 @@ const loop = errorMapper(() => {
             console.log('Clearing non-existing creep memory:', name);
         }
     }
-    //spawn creep
-    var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
-    var upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader');
-    var builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder');
-    var wallRepairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'wallRepairer');
-    var crossSourceHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossSourceHarvester');
-    var attackers = _.filter(Game.creeps, (creep) => creep.memory.role == "attacker");
-    var claimers = _.filter(Game.creeps, (creep) => creep.memory.role == "claimer");
-    var miners = _.filter(Game.creeps, (creep) => creep.memory.role == "miner");
-    //resource pooint
-    //energy count
-    var energyMax = Game.spawns['Spawn1'].room.energyCapacityAvailable;
-    var energyAvaliable = Game.spawns['Spawn1'].room.energyAvailable;
-    var energy1 = Game.getObjectById('5bbcaf169099fc012e63a241');
-    var energy2 = Game.getObjectById('5bbcaf169099fc012e63a240');
-    // console.log("energyMax: "+energyMax);
-    // console.log("Energy Avaliable: "+ energyAvaliable);
-    //this.spawnCreep(body,name,{memory: {role: roleName}});
-    if (harvesters.length < 2) {
-        let energyUsing = undefined;
-        if (crossSourceHarvesters.length == 0 && harvesters.length == 0) {
-            energyUsing = energyAvaliable;
+    for (let room in Game.rooms) {
+        if (room == "E35S47") {
+            //spawn creep
+            let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.memory.homeRoom == room);
+            let upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.memory.homeRoom == room);
+            let builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.memory.homeRoom == room);
+            let wallRepairers = _.filter(Game.creeps, (creep) => creep.memory.role == 'wallRepairer' && creep.memory.homeRoom == room);
+            let crossSourceHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossSourceHarvester' && creep.memory.homeRoom == room);
+            let attackers = _.filter(Game.creeps, (creep) => creep.memory.role == "attacker" && creep.memory.homeRoom == room);
+            let claimers = _.filter(Game.creeps, (creep) => creep.memory.role == "claimer" && creep.memory.homeRoom == room);
+            let miners = _.filter(Game.creeps, (creep) => creep.memory.role == "miner" && creep.memory.homeRoom == room);
+            let trashHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == "trashHarvester" && creep.memory.homeRoom == room);
+            let centerCreeps = _.filter(Game.creeps, (creep) => creep.memory.role == "centerCreep" && creep.memory.homeRoom == room);
+            //resource pooint
+            //energy count
+            var energyMax = Game.spawns['Spawn1'].room.energyCapacityAvailable;
+            var energyAvaliable = Game.spawns['Spawn1'].room.energyAvailable;
+            var energy1 = Game.getObjectById('5bbcaf169099fc012e63a241');
+            var energy2 = Game.getObjectById('5bbcaf169099fc012e63a240');
+            var mineral = Game.getObjectById('5bbcb634d867df5e54207604');
+            var linkList = [Game.getObjectById('61a3f58732b74f02f5a76f1a'), Game.getObjectById('61b63cf5d1bce84e93eb30bd'), Game.getObjectById('61b63440d582576e9ae52683')];
+            // console.log("energyMax: "+energyMax);
+            // console.log("Energy Avaliable: "+ energyAvaliable);
+            //this.spawnCreep(body,name,{memory: {role: roleName}});
+            if (harvesters.length < 1) {
+                let energyUsing = undefined;
+                if (crossSourceHarvesters.length == 0 && harvesters.length == 0) {
+                    energyUsing = energyAvaliable;
+                }
+                else {
+                    energyUsing = 1600;
+                }
+                Game.spawns['Spawn1'].spawnCreep(Body.createMoveCarryBody(energyUsing), "Harvester_" + RandomName.createName(), { memory: { role: "harvester", homeRoom: 'E35S47', linkList: [linkList[0].id, linkList[1].id] } });
+            }
+            else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_0")) {
+                Game.spawns['Spawn1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_0", { memory: { role: "harvestCreep", sourceId: '5bbcaf069099fc012e639ff5', dontPullMe: true, homeRoom: 'E35S47' } });
+            }
+            else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_1")) {
+                Game.spawns['Spawn1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_1", { memory: { role: "harvestCreep", sourceId: '5bbcaf069099fc012e639ff6', dontPullMe: true, homeRoom: 'E35S47' } });
+                // }else if(centerCreeps.length < 1){
+                //     Game.spawns['Spawn1'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
+                //     {memory: {role: "centerCreep", dontPullMe: true,homeRoom: 'E35S47'}});        
+            }
+            else if (trashHarvesters.length < 1) {
+                Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "捡垃圾的" + RandomName.createName(), { memory: { role: "trashHarvester", homeRoom: 'E35S47' } });
+            }
+            else if (upgraders.length < 4) {
+                Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "Upgrader_" + RandomName.createName(), { memory: { role: "upgrader", homeRoom: 'E35S47' } });
+            }
+            else if (builders.length < 1) {
+                Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(800), "Builder_" + RandomName.createName(), { memory: { role: "builder", homeRoom: 'E35S47' } });
+            }
+            else if (claimers.length < 1) {
+                Game.spawns['Spawn1'].spawnCreep([CLAIM, CLAIM, MOVE, MOVE], "Claimer_" + RandomName.createName(), { memory: { role: "claimer", homeRoom: 'E35S47', targetRoom: "E36S47" } });
+            }
+            else if (attackers.length < 1) {
+                Game.spawns['Spawn1'].spawnCreep([TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, HEAL, MOVE, MOVE, MOVE, MOVE, MOVE], "Attacker_" + RandomName.createName(), { memory: { role: "attacker", homeRoom: 'E35S47', targetRoom: "E36S47" } });
+            }
+            else if (miners.length < 1 && mineral.mineralAmount > 0) {
+                Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "Miner_" + RandomName.createName(), { memory: { role: "miner", homeRoom: 'E35S47' } });
+            }
+            else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_0")) {
+                Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4, 2500), "CrossSourceHarvester_0", { memory: { role: "crossSourceHarvester", homeRoom: 'E35S47', targetRoom: 'E36S47' } });
+            }
+            else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_1")) {
+                Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4, 2500), "CrossSourceHarvester_1", { memory: { role: "crossSourceHarvester", homeRoom: 'E35S47', targetRoom: 'E36S47' } });
+            }
+            //tower logic
+            let towers = Game.spawns['Spawn1'].room.find(FIND_STRUCTURES, {
+                filter: (t) => t.structureType == STRUCTURE_TOWER
+            });
+            for (let tower of towers) {
+                var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+                if (closestHostile) {
+                    tower.attack(closestHostile);
+                }
+                else {
+                    var targets = tower.room.find(FIND_STRUCTURES, {
+                        filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits / s.hitsMax < 0.8
+                    });
+                    if (targets.length && tower.store[RESOURCE_ENERGY] > 300) {
+                        tower.repair(targets[0]);
+                    }
+                }
+            }
+            //link logic
+            if (linkList[2].store.getUsedCapacity(RESOURCE_ENERGY) >= 700) {
+                if (linkList[1].store.getUsedCapacity(RESOURCE_ENERGY) < 700) {
+                    linkList[2].transferEnergy(linkList[1]);
+                }
+                else {
+                    linkList[2].transferEnergy(linkList[0]);
+                }
+            }
         }
-        else {
-            energyUsing = 1600;
-        }
-        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.1, energyUsing), "Harvester_" + RandomName.createName(), { memory: { role: "harvester" } });
-    }
-    else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_0")) {
-        Game.spawns['Spawn1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_0", { memory: { role: "harvestCreep", sourceId: '5bbcaf069099fc012e639ff5' } });
-    }
-    else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_1")) {
-        Game.spawns['Spawn1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_1", { memory: { role: "harvestCreep", sourceId: '5bbcaf069099fc012e639ff6' } });
-    }
-    else if (upgraders.length < 1) {
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "Upgrader_" + RandomName.createName(), { memory: { role: "upgrader" } });
-    }
-    else if (builders.length < 1) {
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "Builder_" + RandomName.createName(), { memory: { role: "builder" } });
-    }
-    else if (wallRepairers.length < 1) {
-        Game.spawns['Spawn1'].spawnCreep(Body.createAverageBody(1200), "WallRepairer_" + RandomName.createName(), { memory: { role: "wallRepairer", target: undefined } });
-    }
-    else if (claimers.length < 1) {
-        Game.spawns['Spawn1'].spawnCreep([CLAIM, CLAIM, MOVE, MOVE], "Claimer_" + RandomName.createName(), { memory: { role: "claimer", targetRoom: "E36S47" } });
-    }
-    else if (miners.length < 1) {
-        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.3, 1200), "Miner_" + RandomName.createName(), { memory: { role: "miner" } });
-    }
-    else if (attackers.length < 1) {
-        Game.spawns['Spawn1'].spawnCreep([TOUGH, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, MOVE, MOVE, MOVE, MOVE, MOVE], "Attacker_" + RandomName.createName(), { memory: { role: "attacker", targetRoom: "E36S47" } });
-    }
-    else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_0")) {
-        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4, energyMax), "CrossSourceHarvester_0", { memory: { role: "crossSourceHarvester", homeRoom: 'E35S47', targetRoom: 'E36S47' } });
-    }
-    else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_1")) {
-        Game.spawns['Spawn1'].spawnCreep(Body.createPercentageBody(0.4, energyMax), "CrossSourceHarvester_1", { memory: { role: "crossSourceHarvester", homeRoom: 'E35S47', targetRoom: 'E36S47' } });
-    }
-    //tower logic
-    var towers = Game.spawns['Spawn1'].room.find(FIND_STRUCTURES, {
-        filter: (t) => t.structureType == STRUCTURE_TOWER
-    });
-    for (let tower of towers) {
-        //   var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-        //       filter: (structure) => structure.hits < structure.hitsMax
-        //   });
-        //   if(closestDamagedStructure) {
-        //       tower.repair(closestDamagedStructure);
-        //   }
-        var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-        if (closestHostile) {
-            tower.attack(closestHostile);
-        }
-        var targets = tower.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits < s.hitsMax
-        });
-        if (targets.length && tower.store[RESOURCE_ENERGY] > 300) {
-            tower.repair(targets[0]);
+        else if (room == "E39S47") {
+            let harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.memory.homeRoom == room);
+            let upgraders = _.filter(Game.creeps, (creep) => creep.memory.role == 'upgrader' && creep.memory.homeRoom == room);
+            let builders = _.filter(Game.creeps, (creep) => creep.memory.role == 'builder' && creep.memory.homeRoom == room);
+            let trashHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == "trashHarvester" && creep.memory.homeRoom == room);
+            let crossSourceHarvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'crossSourceHarvester' && creep.memory.homeRoom == room);
+            let energyAvaliable = Game.rooms[room].energyAvailable;
+            let energyMax = Game.rooms[room].energyCapacityAvailable;
+            if (Game.spawns['Spawn2']) {
+                if (harvesters.length < 1) {
+                    let energyUsing = undefined;
+                    if (crossSourceHarvesters.length == 0 && harvesters.length == 0) {
+                        energyUsing = energyAvaliable;
+                    }
+                    else {
+                        energyUsing = 1200;
+                    }
+                    Game.spawns['Spawn2'].spawnCreep(Body.createMoveCarryBody(energyUsing), "Harvester_" + RandomName.createName(), { memory: { role: "harvester", homeRoom: 'E39S47', containerId: "" } });
+                }
+                else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_2")) {
+                    Game.spawns['Spawn2'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_2", { memory: { role: "harvestCreep", sourceId: '5bbcaf4a9099fc012e63a6ec', dontPullMe: true, homeRoom: 'E39S47' } });
+                }
+                else if (!_.some(Game.creeps, (c) => c.name == "HarvestCreep_3")) {
+                    Game.spawns['Spawn2'].spawnCreep([WORK, WORK, WORK, WORK, WORK, MOVE], "HarvestCreep_3", { memory: { role: "harvestCreep", sourceId: '5bbcaf4a9099fc012e63a6ee', dontPullMe: true, homeRoom: 'E39S47' } });
+                }
+                else if (trashHarvesters.length < 1) {
+                    Game.spawns['Spawn2'].spawnCreep(Body.createAverageBody(1200), "捡垃圾的" + RandomName.createName(), { memory: { role: "trashHarvester", homeRoom: 'E39S47' } });
+                }
+                else if (upgraders.length < 1) {
+                    Game.spawns['Spawn2'].spawnCreep(Body.createAverageBody(1200), "Upgrader_" + RandomName.createName(), { memory: { role: "upgrader", homeRoom: 'E39S47' } });
+                }
+                else if (builders.length < 1) {
+                    Game.spawns['Spawn2'].spawnCreep(Body.createAverageBody(1200), "Builder_" + RandomName.createName(), { memory: { role: "builder", homeRoom: 'E39S47' } });
+                }
+                else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_2")) {
+                    Game.spawns['Spawn2'].spawnCreep(Body.createPercentageBody(0.4, energyMax), "CrossSourceHarvester_2", { memory: { role: "crossSourceHarvester", homeRoom: 'E39S47', targetRoom: 'E39S46' } });
+                }
+                else if (!_.some(Game.creeps, (c) => c.name == "CrossSourceHarvester_3")) {
+                    Game.spawns['Spawn2'].spawnCreep(Body.createPercentageBody(0.4, energyMax), "CrossSourceHarvester_3", { memory: { role: "crossSourceHarvester", homeRoom: 'E39S47', targetRoom: 'E39S46' } });
+                }
+            }
+            let towers = Game.rooms['E39S47'].find(FIND_STRUCTURES, {
+                filter: (t) => t.structureType == STRUCTURE_TOWER
+            });
+            for (let tower of towers) {
+                let closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS, {
+                    filter: (c) => c.owner.username != "superbitch"
+                });
+                if (closestHostile) {
+                    tower.attack(closestHostile);
+                }
+                else {
+                    let targets = tower.room.find(FIND_STRUCTURES, {
+                        filter: (s) => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART && s.hits / s.hitsMax < 0.8
+                    });
+                    if (targets.length && tower.store[RESOURCE_ENERGY] > 500) {
+                        tower.repair(targets[0]);
+                    }
+                }
+            }
         }
     }
     //creep running
@@ -4138,7 +5894,7 @@ const loop = errorMapper(() => {
             HarvestCreep.run(creep);
         }
         if (creep.memory.role == "upgrader") {
-            Upgrader.run(creep);
+            Upgrader$1.run(creep);
         }
         if (creep.memory.role == "builder") {
             Builder.run(creep);
@@ -4146,18 +5902,18 @@ const loop = errorMapper(() => {
         if (creep.memory.role == "repairer") {
             Repairer.run(creep);
         }
-        if (creep.memory.role == "wallRepairer") {
-            WallRepairer.run(creep);
-        }
-        if (creep.memory.role == "crossHarvester") {
-            CrossHarvester.run(creep);
-        }
         //特殊处理
         if (creep.name == "CrossSourceHarvester_0") {
-            CrossSourceHarvester.run(creep, energy1);
+            CrossSourceHarvester.run(creep, energy1, linkList[2]);
         }
         if (creep.name == "CrossSourceHarvester_1") {
-            CrossSourceHarvester.run(creep, energy2);
+            CrossSourceHarvester.run(creep, energy2, linkList[2]);
+        }
+        if (creep.name == "CrossSourceHarvester_2") {
+            CrossSourceHarvester.run(creep, Game.getObjectById('5bbcaf4a9099fc012e63a6e9'));
+        }
+        if (creep.name == "CrossSourceHarvester_3") {
+            CrossSourceHarvester.run(creep, Game.getObjectById('5bbcaf4a9099fc012e63a6e9'));
         }
         if (creep.memory.role == "attacker") {
             Attacker.run(creep, Game.getObjectById("61ad3d7c9a9476cea28addf2"));
@@ -4167,6 +5923,22 @@ const loop = errorMapper(() => {
         }
         if (creep.memory.role == "miner") {
             Miner.run(creep);
+        }
+        if (creep.memory.role == "trashHarvester") {
+            TrashHarvester.run(creep);
+        }
+        if (creep.memory.role == "centerCreep") {
+            CenterCreep.run(creep);
+        }
+        if (creep.memory.role == "roomClaimer") {
+            RoomClaimer.run(creep);
+        }
+        //删
+        if (creep.memory.role == "crossRoomBuilder") {
+            crossRoomBuilder.run(creep);
+        }
+        if (creep.memory.role == "crossRoomAttacker") {
+            crossRoomAttacker.run(creep);
         }
     }
     //奇怪的东西

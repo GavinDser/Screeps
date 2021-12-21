@@ -20,6 +20,38 @@ interface CreepMemory {
     //Creep的boolean，用于转换状态
     working?:boolean
 
+    //对穿状态
+    dontPullMe? : boolean
 
+    //行走房间路线:
+    path? : string[]
 
+    //wtf linked list
+    linkList? : String[]
+    
+    //controller near source??
+    controllerSource?: boolean
+
+    //stateVariable
+    stateSwitch?: boolean
+
+    // container Id
+    containerId?: string
+}
+
+interface PowerCreepMemory {
+    role: string;
+}
+
+interface SpawnQueue {
+    //queue: queueConstant[];
+    constructor();
+}
+
+type queueConstant = {
+    role: string;
+    priority: number;
+    bodyConstant: BodyPartConstant;
+    name?: string;
+    room: string;       
 }

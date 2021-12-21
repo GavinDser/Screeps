@@ -1,8 +1,8 @@
 
 export const Body = {
     createAverageBody: function(energy:number):BodyPartConstant[]{
-      var numParts = Math.floor(energy/200);
-      var body = [];
+      let numParts = Math.floor(energy/200);
+      let body = [];
       for (let i = 0; i< numParts; i++){
         body.push(WORK);
       }
@@ -17,8 +17,8 @@ export const Body = {
     },
   
     createPercentageBody: function(percentageWork:number, energy:number):BodyPartConstant[]{
-      var workParts = Math.floor(energy * percentageWork/150);
-      var body = []
+      let workParts = Math.floor(energy * percentageWork/150);
+      let body = []
       for (let i = 0; i < workParts; i ++){
         body.push(WORK);
       }
@@ -36,8 +36,8 @@ export const Body = {
   
   
     createSoloBody: function(typeCreep:string, energy:number):BodyPartConstant[]{
-      var workParts = Math.floor((energy - 250)/100);
-      var body = []
+      let workParts = Math.floor((energy - 250)/100);
+      let body = []
       if (typeCreep == 'work'){
         for (let i = 0; i < workParts; i++){
           body.push(WORK);
@@ -51,6 +51,21 @@ export const Body = {
       for (let i = 0; i < 5; i++){
         body.push(MOVE);
       }
+      return body;
+    },
+
+    createMoveCarryBody: function(energy:number): BodyPartConstant[]{
+      let body = []
+      let number = Math.floor((energy-150)/3/50);
+
+
+      for (let i = 0; i < number; i++){
+        body.push(CARRY);
+        body.push(CARRY);
+        body.push(MOVE);
+      }
+      body.push(WORK);
+      body.push(MOVE);
       return body;
     }
   };
