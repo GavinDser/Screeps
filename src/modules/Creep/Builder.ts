@@ -5,7 +5,7 @@ export const Builder = {
   /** @param {Creep} creep **/
   run: function(creep: Creep ): void {
 
-    if(creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+    if(creep.memory.working && creep.store.getUsedCapacity() == 0) {
           creep.memory.working = false;
     }
     if(!creep.memory.working && creep.store.getFreeCapacity() == 0) {
@@ -13,22 +13,25 @@ export const Builder = {
     }
 
     if(creep.memory.working) {
+        let storageBuild = creep.room.find(FIND_CONSTRUCTION_SITES, {
+            filter: (s) => s.structureType == STRUCTURE_STORAGE
+        })
         var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-          if(targets.length) {
-              if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                  creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-              }
-          }
-          else{
-                wallRepairer.run(creep);
-              
-          }
+        if(targets.length) {
+            if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+            }
+        }
+        else{
+            wallRepairer.run(creep);
+            
+        }
     }
     else {
 
 
         let sources = creep.room.find(FIND_STRUCTURES, {
-            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1500
+            filter: (s) => s.structureType == STRUCTURE_CONTAINER && s.store[RESOURCE_ENERGY] > 1800
         })
         let source = _.sortBy(sources, (s:StructureContainer)=> s.store[RESOURCE_ENERGY]).reverse()
         if (source.length){
@@ -36,7 +39,7 @@ export const Builder = {
                 creep.moveTo(source[0]);
             }
         }
-        else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 1000){
+        else if (creep.room.storage && creep.room.storage.store[RESOURCE_ENERGY] > 300){
             if (creep.withdraw(creep.room.storage,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
                 creep.moveTo(creep.room.storage)
             }
@@ -47,11 +50,11 @@ export const Builder = {
                     creep.moveTo(Game.getObjectById(creep.memory.sourceId))
                 }
             }
-            else{
-                if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
-                }
-            }
+            // else{
+            //     if(creep.harvest(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE)) == ERR_NOT_IN_RANGE) {
+            //         creep.moveTo(creep.pos.findClosestByRange(FIND_SOURCES_ACTIVE), {visualizePathStyle: {stroke: '#ffaa00'}});
+            //     }
+            // }
         }
     }
 }

@@ -6,7 +6,7 @@ export const CrossHarvester = {
 
     /** @param {Creep} creep **/
     run: function(creep: Creep ) : void {
-        if(!creep.memory.working && creep.store.getFreeCapacity() == creep.store.getCapacity()) {
+        if(!creep.memory.working && creep.store.getFreeCapacity() == creep.store.getUsedCapacity()) {
             creep.memory.working = true;
         }
         if(creep.memory.working && creep.store.getFreeCapacity() == 0) {

@@ -26,8 +26,7 @@ interface CreepMemory {
     //行走房间路线:
     path? : string[]
 
-    //wtf linked list
-    linkList? : String[]
+    linkId?: string;
     
     //controller near source??
     controllerSource?: boolean
@@ -37,21 +36,37 @@ interface CreepMemory {
 
     // container Id
     containerId?: string
+
+    //position to go to (for center creeps)
+    position?: number[]
 }
 
 interface PowerCreepMemory {
     role: string;
 }
 
-interface SpawnQueue {
-    //queue: queueConstant[];
-    constructor();
+interface Memory {
+    // for stats
+    stats: {
+        gcl?: number
+        gclLevel?: number
+        gpl?: number
+        gplLevel?: number
+        cpu?: number
+        bucket?: number
+    }
 }
 
-type queueConstant = {
-    role: string;
-    priority: number;
-    bodyConstant: BodyPartConstant;
-    name?: string;
-    room: string;       
+interface RoomMemory {
+    transportQueue;
+}
+
+interface MoveToOpts {
+    ignoreSwamps?: boolean
+}
+
+//任务系统
+
+type Task = {
+    
 }

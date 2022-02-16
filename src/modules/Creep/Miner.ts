@@ -1,6 +1,6 @@
 export const Miner = {
     run: function(creep: Creep): void {
-        if(!creep.memory.working && creep.store.getFreeCapacity() != 0) {
+        if(!creep.memory.working && creep.store.getUsedCapacity() == 0) {
             creep.memory.working = true;
         }
         if(creep.memory.working && creep.store.getFreeCapacity() == 0) {
@@ -16,8 +16,8 @@ export const Miner = {
             }
         }
         else{
-            if(creep.harvest(creep.pos.findClosestByRange(FIND_MINERALS)) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(creep.pos.findClosestByRange(FIND_MINERALS), {visualizePathStyle: {stroke: '#ffaa00'}});
+            if(creep.harvest(Game.getObjectById(creep.memory.sourceId)) == ERR_NOT_IN_RANGE) {
+                creep.moveTo(Game.getObjectById(creep.memory.sourceId));
             }  
         }
     }

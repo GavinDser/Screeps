@@ -1,29 +1,36 @@
 export const RoomClaimer = {
     run: function(creep: Creep): void {
-        let creepPath = creep.memory.path;
-        let pathLength = creepPath.length;
-        let currentPath;
-        if(pathLength > 0){
-            currentPath = creepPath[0];
-            if (creep.room.name != currentPath){
-                let exit = creep.room.findExitTo(currentPath) as FindConstant;
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-                creep.heal(creep)
-            }
-            else {
-                creepPath.shift()
-            }
-        }
-        else{
-            if (creep.room.name == creep.memory.path[0]){
-                if(creep.claimController(creep.room.controller) == ERR_NOT_IN_RANGE){
-                    creep.moveTo(creep.room.controller);
-                    creep.heal(creep);
-                }
-            }
-            else{
-            }
+        // let creepPath = creep.memory.path;
+        // let pathLength = creepPath.length;
+        // let currentPath;
+        // if(pathLength > 0){
+        //     currentPath = creepPath[0];
+        //     if (creep.room.name != currentPath){
+        //         let exit = creep.room.findExitTo(currentPath) as FindConstant;
+        //         creep.moveTo(creep.pos.findClosestByRange(exit));
+        //         creep.heal(creep)
+        //     }
+        //     else {
+        //         creepPath.shift()
+        //     }
+        // }
+        // else{
+        //     if (creep.room.name == creep.memory.path[0]){
+        //         if(creep.claimController(creep.room.controller) == ERR_NOT_IN_RANGE){
+        //             creep.moveTo(creep.room.controller);
+        //             creep.heal(creep);
+        //         }
+        //     }
+        //     else{
+        //     }
 
+        // }
+        if (!creep.pos.isEqualTo(new RoomPosition(12,22,"E37S48"))){
+            creep.moveTo(new RoomPosition(12,22,"E37S48"));
+        }
+
+        else{
+            creep.claimController(creep.room.controller)
         }
     }
 }

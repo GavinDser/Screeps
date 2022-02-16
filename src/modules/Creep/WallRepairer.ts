@@ -15,7 +15,7 @@ export const WallRepairer = {
   /** @param {Creep} creep **/
   run: function(creep: Creep) {
 
-    if(creep.memory.working && creep.store[RESOURCE_ENERGY] == 0) {
+    if(creep.memory.working && creep.store.getUsedCapacity() == 0) {
           creep.memory.working = false;
     }
     if(!creep.memory.working && creep.store.getFreeCapacity() == 0) {
@@ -23,11 +23,16 @@ export const WallRepairer = {
     }
 
     if(creep.memory.working) {
-
-
+        let setPercentage;
+        if (creep.memory.homeRoom == "E35S47"){
+            setPercentage = 0.25
+        }
+        else{
+            setPercentage = 1
+        }
         var ramparts = creep.room.find(FIND_STRUCTURES, {
             filter: (s) => 
-                s.structureType ==  STRUCTURE_RAMPART && (s.hits/s.hitsMax < 0.5)
+                s.structureType ==  STRUCTURE_RAMPART && (s.hits/s.hitsMax < setPercentage)
             
         });
         var findRampart = function(){
@@ -51,7 +56,7 @@ export const WallRepairer = {
                 if (newRampart().length && creep.memory.target.id != newRampart()[0].id){
                     creep.memory.target = undefined
                 }
-                if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
+                else if(creep.repair(Game.getObjectById(creep.memory.target.id)) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(Game.getObjectById(creep.memory.target.id), {visualizePathStyle: {stroke: '#ffffff'}});
                 }
             }
