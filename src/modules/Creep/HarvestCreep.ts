@@ -11,9 +11,13 @@ export const HarvestCreep ={
         }
         else{
             if (link){
-                creep.transfer(link,RESOURCE_ENERGY);
+                if (creep.transfer(link,RESOURCE_ENERGY) == ERR_NOT_IN_RANGE){
+                    creep.moveTo(link);
+                }    
             }
-            creep.harvest(source);
+            if(creep.harvest(source) == ERR_NOT_IN_RANGE){
+                creep.moveTo(source);
+            }
         }
 
     }

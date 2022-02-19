@@ -93,14 +93,30 @@ export const loop = errorMapper(() => {
             //     Game.spawns['E35S47_1'].spawnCreep(bodyType.createMoveCarryBody(energyUsing),"Harvester_"+randomName.createName(),
             //     {memory: {role: "harvester",homeRoom: 'E35S47',linkId: '61a3f58732b74f02f5a76f1a',stateSwitch:false}});
             
-            if(trashHarvesters.length < 2){
-                Game.spawns['E35S47_1'].spawnCreep(bodyType.createAverageBody(2000),"捡垃圾的"+randomName.createName(),
-                {memory: {role: "trashHarvester",homeRoom: 'E35S47'}});
+            if(trashHarvesters.length < 2) {
+                let energyUsing = undefined;
+                if (trashHarvesters.length == 0){
+                    if (energyAvaliable < 300){
+                        energyUsing = 300
+                    }
+                    else if (energyAvaliable < 2000){
+                        energyUsing = energyAvaliable
+                    }
+                    
+                    else{
+                        energyUsing = 2000
+                    }
+                }
+                else{
+                    energyUsing = 2000;
+                }
+            Game.spawns['E35S47_1'].spawnCreep(bodyType.createAverageBody(energyUsing),"捡垃圾的"+randomName.createName(),
+            {memory: {role: "trashHarvester",homeRoom: 'E35S47'}});
             }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_0")){
-                Game.spawns['E35S47_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE], "HarvestCreep_0",
+                Game.spawns['E35S47_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE], "HarvestCreep_0",
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf069099fc012e639ff5', dontPullMe: true,homeRoom: 'E35S47'}});
             }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_1")){
-                Game.spawns['E35S47_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE], "HarvestCreep_1",
+                Game.spawns['E35S47_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE], "HarvestCreep_1",
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf069099fc012e639ff6', dontPullMe: true,homeRoom: 'E35S47'}});
             
 
@@ -227,22 +243,26 @@ export const loop = errorMapper(() => {
                     if (energyAvaliable < 300){
                         energyUsing = 300
                     }
+                    else if (energyAvaliable < 2000){
+                        energyUsing = energyAvaliable
+                    }
+                    
                     else{
-                        energyUsing = energyAvaliable;
+                        energyUsing = 2000
                     }
                 }
                 else{
-                    energyUsing = 1700;
+                    energyUsing = 2000;
                 }
             Game.spawns['E39S47_2'].spawnCreep(bodyType.createAverageBody(energyUsing),"捡垃圾的"+randomName.createName(),
             {memory: {role: "trashHarvester",homeRoom: 'E39S47'}});
             
             }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_2")){
-                Game.spawns['E39S47_2'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE], "HarvestCreep_2",
+                Game.spawns['E39S47_2'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE], "HarvestCreep_2",
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf4a9099fc012e63a6ec', dontPullMe: true,homeRoom: 'E39S47'}});
 
             }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_3")){
-                Game.spawns['E39S47_2'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE], "HarvestCreep_3",
+                Game.spawns['E39S47_2'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE], "HarvestCreep_3",
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf4a9099fc012e63a6ee', dontPullMe: true,homeRoom: 'E39S47'}});
             
             }else if(centerCreeps.length < 1){
@@ -266,11 +286,11 @@ export const loop = errorMapper(() => {
                 {memory: {role: "attacker", homeRoom: 'E39S47',targetRoom:"E39S46"}});
 
             }else if (miners.length < 1 && mineral.mineralAmount > 0){
-                Game.spawns['E39S47_2'].spawnCreep(bodyType.createAverageBody(800), "Miner_"+randomName.createName(),
+                Game.spawns['E39S47_1'].spawnCreep(bodyType.createAverageBody(800), "Miner_"+randomName.createName(),
                 {memory: {role: "miner",homeRoom: 'E39S47', sourceId:"5bbcb65cd867df5e5420778d"}}); 
 
             }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_2")){
-                Game.spawns['E39S47_2'].spawnCreep(bodyType.createPercentageBody(0.4,2400),"CrossSourceHarvester_2",
+                Game.spawns['E39S47_1'].spawnCreep(bodyType.createPercentageBody(0.4,2500),"CrossSourceHarvester_2",
                 {memory: {role: "crossSourceHarvester", homeRoom:'E39S47', targetRoom:'E39S46', sourceId:'5bbcaf4a9099fc012e63a6e9', linkId:'61d6dd2832dc6d502a7918ac'}});    
             
             } 
@@ -331,45 +351,49 @@ export const loop = errorMapper(() => {
 
             var mineral= Game.getObjectById('5bbcb647d867df5e542076b6') as Mineral;
 
-            let trashHarvesterAmount;
+            let upgraderAmount;
             if (Game.rooms[room].storage.store[RESOURCE_ENERGY] > 200000){
-                trashHarvesterAmount = 3
+                upgraderAmount = 2
             }
             else{
-                trashHarvesterAmount = 2;   
+                upgraderAmount = 1;   
             }
 
-            if(trashHarvesters.length < trashHarvesterAmount) {
+            if(trashHarvesters.length < 2) {
                 let energyUsing = undefined;
                 if (trashHarvesters.length == 0){
                     if (energyAvaliable < 300){
                         energyUsing = 300
                     }
+                    else if (energyAvaliable < 2000){
+                        energyUsing = energyAvaliable
+                    }
+                    
                     else{
-                        energyUsing = energyAvaliable;
+                        energyUsing = 2000
                     }
                 }
                 else{
-                    energyUsing = 1600;
+                    energyUsing = 2000;
                 }
                 Game.spawns['E37S48_1'].spawnCreep(bodyType.createMoveCarryBody(energyUsing),"捡垃圾的"+randomName.createName(),
                 {memory: {role: "trashHarvester",homeRoom: 'E37S48'}});
             }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_4")){
-                Game.spawns['E37S48_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE], "HarvestCreep_4",
+                Game.spawns['E37S48_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE], "HarvestCreep_4",
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf269099fc012e63a3dc', dontPullMe: true,homeRoom: 'E37S48'}});
 
             }else if(!_.some(Game.creeps,(c)=> c.name == "HarvestCreep_5")){
-                Game.spawns['E37S48_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE], "HarvestCreep_5",
+                Game.spawns['E37S48_1'].spawnCreep([WORK,WORK,WORK,WORK,WORK,CARRY,MOVE,MOVE,MOVE,MOVE,MOVE], "HarvestCreep_5",
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf269099fc012e63a3de', dontPullMe: true,homeRoom: 'E37S48'}});
 
             }else if(centerCreeps.length < 1){
                 Game.spawns['E37S48_1'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
                 {memory: {role: "centerCreep", dontPullMe: true,homeRoom: 'E37S48',position:[41,36], working: true}});    
-            }else if(upgraders.length < 1){
-                Game.spawns['E37S48_1'].spawnCreep(bodyType.createAverageBody(1200),"Upgrader_"+randomName.createName(),
+            }else if(upgraders.length < upgraderAmount){
+                Game.spawns['E37S48_1'].spawnCreep(bodyType.createAverageBody(1800),"Upgrader_"+randomName.createName(),
                 {memory: {role: "upgrader",homeRoom: 'E37S48', sourceId:"5bbcaf269099fc012e63a3de"}});                
             }else if(builders.length < 1){
-                Game.spawns['E37S48_1'].spawnCreep(bodyType.createAverageBody(1200),"Builder_"+randomName.createName(),
+                Game.spawns['E37S48_1'].spawnCreep(bodyType.createAverageBody(1800),"Builder_"+randomName.createName(),
                 {memory:{ role: "builder",homeRoom: 'E37S48',sourceId:"5bbcaf269099fc012e63a3dc"}});
 
             }else if (miners.length < 1 && mineral.mineralAmount > 0){
@@ -379,14 +403,14 @@ export const loop = errorMapper(() => {
 
 
             }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_3")){
-                Game.spawns['E37S48_1'].spawnCreep(bodyType.createPercentageBody(0.4,1800),"CrossSourceHarvester_3",
+                Game.spawns['E37S48_1'].spawnCreep(bodyType.createPercentageBody(0.4,2500),"CrossSourceHarvester_3",
                 {memory: {role: "crossSourceHarvester", homeRoom:'E37S48', targetRoom:'E37S49', sourceId:'5bbcaf269099fc012e63a3e0'}}); 
             
             }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_4")){
-                Game.spawns['E37S48_1'].spawnCreep(bodyType.createPercentageBody(0.4,1800),"CrossSourceHarvester_4",
+                Game.spawns['E37S48_1'].spawnCreep(bodyType.createPercentageBody(0.4,2500),"CrossSourceHarvester_4",
                 {memory: {role: "crossSourceHarvester", homeRoom:'E37S48', targetRoom:'E36S48', sourceId:'5bbcaf169099fc012e63a245',linkId:'61ed52620bd2bf7ca5dd404b'}}); 
             }else if (!_.some(Game.creeps,(c)=> c.name == "CrossSourceHarvester_5")){
-                Game.spawns['E37S48_1'].spawnCreep(bodyType.createPercentageBody(0.4,1800),"CrossSourceHarvester_5",
+                Game.spawns['E37S48_1'].spawnCreep(bodyType.createPercentageBody(0.4,2500),"CrossSourceHarvester_5",
                 {memory: {role: "crossSourceHarvester", homeRoom:'E37S48', targetRoom:'E37S47', sourceId:'5bbcaf269099fc012e63a3d9',linkId:'61e7dfc0363f39514da6ee51'}}); 
             }
 
