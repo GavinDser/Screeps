@@ -31,12 +31,12 @@ export const CenterCreep = {
                     else if (creep.store[RESOURCE_ZYNTHIUM] > 0){
                         creep.transfer(factory,RESOURCE_ZYNTHIUM);
                     }
-                    else if (factory.store[RESOURCE_ENERGY] < 200){
+                    else if (factory.store[RESOURCE_ENERGY] < 200 && creep.room.storage[RESOURCE_ZYNTHIUM] > 6000){
                         creep.transfer(factory,RESOURCE_ENERGY)
                         creep.withdraw(creep.room.storage,RESOURCE_ENERGY);
                     }
 
-                    else if (factory.store[RESOURCE_ZYNTHIUM] < 500){
+                    else if (factory.store[RESOURCE_ZYNTHIUM] < 500 && creep.room.storage[RESOURCE_ZYNTHIUM] > 6000){
                         creep.withdraw(creep.room.storage,RESOURCE_ZYNTHIUM);
                     }
                     else{
@@ -57,10 +57,6 @@ export const CenterCreep = {
                 // }
             }
             if (creep.memory.homeRoom == "E39S47"){
-                // if (creep.room.terminal.store[RESOURCE_ENERGY] > 0){
-                //     creep.withdraw(creep.room.terminal,RESOURCE_ENERGY);
-                //     creep.transfer(creep.room.storage,RESOURCE_ENERGY);
-                // }
                 let factory = Game.getObjectById("61e5f5e94aca3a629c20a8e7") as StructureFactory;
                 let linkPoint = Game.getObjectById('61e4e758883aa8f6df8c1c5d') as StructureLink;
                 if (linkPoint && linkPoint.store.getUsedCapacity(RESOURCE_ENERGY) > 0){
@@ -70,6 +66,17 @@ export const CenterCreep = {
                     }
                     creep.withdraw(linkPoint,RESOURCE_ENERGY);
                     
+                }
+                else if (creep.room.terminal.store[RESOURCE_ENERGY] > 0){
+                    if (creep.store.getFreeCapacity() == 0){
+                        for (const resourceType in creep.store){
+                            if (creep.transfer(creep.room.storage,resourceType as ResourceConstant) == ERR_NOT_IN_RANGE){
+                            }
+                        }
+                    }
+                    else{
+                        creep.withdraw(creep.room.terminal,RESOURCE_ENERGY);
+                    }
                 }
                 else if (factory.cooldown < 6 && creep.room.storage.store[RESOURCE_UTRIUM] > 5000){
                     if (creep.store[RESOURCE_UTRIUM_BAR] > 0){
@@ -81,12 +88,12 @@ export const CenterCreep = {
                     else if (creep.store[RESOURCE_UTRIUM] > 0){
                         creep.transfer(factory,RESOURCE_UTRIUM);
                     }
-                    else if (factory.store[RESOURCE_ENERGY] < 200){
+                    else if (factory.store[RESOURCE_ENERGY] < 200 && creep.room.storage[RESOURCE_UTRIUM] > 6000){
                         creep.transfer(factory,RESOURCE_ENERGY)
                         creep.withdraw(creep.room.storage,RESOURCE_ENERGY);
                     }
 
-                    else if (factory.store[RESOURCE_UTRIUM] < 500){
+                    else if (factory.store[RESOURCE_UTRIUM] < 500 && creep.room.storage[RESOURCE_UTRIUM] > 6000){
                         creep.withdraw(creep.room.storage,RESOURCE_UTRIUM);
                     }
                     else{

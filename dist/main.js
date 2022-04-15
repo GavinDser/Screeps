@@ -4180,11 +4180,11 @@ const CenterCreep = {
                     else if (creep.store[RESOURCE_ZYNTHIUM] > 0) {
                         creep.transfer(factory, RESOURCE_ZYNTHIUM);
                     }
-                    else if (factory.store[RESOURCE_ENERGY] < 200) {
+                    else if (factory.store[RESOURCE_ENERGY] < 200 && creep.room.storage[RESOURCE_ZYNTHIUM] > 6000) {
                         creep.transfer(factory, RESOURCE_ENERGY);
                         creep.withdraw(creep.room.storage, RESOURCE_ENERGY);
                     }
-                    else if (factory.store[RESOURCE_ZYNTHIUM] < 500) {
+                    else if (factory.store[RESOURCE_ZYNTHIUM] < 500 && creep.room.storage[RESOURCE_ZYNTHIUM] > 6000) {
                         creep.withdraw(creep.room.storage, RESOURCE_ZYNTHIUM);
                     }
                     else {
@@ -4203,10 +4203,6 @@ const CenterCreep = {
                 // }
             }
             if (creep.memory.homeRoom == "E39S47") {
-                // if (creep.room.terminal.store[RESOURCE_ENERGY] > 0){
-                //     creep.withdraw(creep.room.terminal,RESOURCE_ENERGY);
-                //     creep.transfer(creep.room.storage,RESOURCE_ENERGY);
-                // }
                 let factory = Game.getObjectById("61e5f5e94aca3a629c20a8e7");
                 let linkPoint = Game.getObjectById('61e4e758883aa8f6df8c1c5d');
                 if (linkPoint && linkPoint.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
@@ -4214,6 +4210,16 @@ const CenterCreep = {
                         if (creep.transfer(creep.room.storage, resourceType) == ERR_NOT_IN_RANGE) ;
                     }
                     creep.withdraw(linkPoint, RESOURCE_ENERGY);
+                }
+                else if (creep.room.terminal.store[RESOURCE_ENERGY] > 0) {
+                    if (creep.store.getFreeCapacity() == 0) {
+                        for (const resourceType in creep.store) {
+                            if (creep.transfer(creep.room.storage, resourceType) == ERR_NOT_IN_RANGE) ;
+                        }
+                    }
+                    else {
+                        creep.withdraw(creep.room.terminal, RESOURCE_ENERGY);
+                    }
                 }
                 else if (factory.cooldown < 6 && creep.room.storage.store[RESOURCE_UTRIUM] > 5000) {
                     if (creep.store[RESOURCE_UTRIUM_BAR] > 0) {
@@ -4225,11 +4231,11 @@ const CenterCreep = {
                     else if (creep.store[RESOURCE_UTRIUM] > 0) {
                         creep.transfer(factory, RESOURCE_UTRIUM);
                     }
-                    else if (factory.store[RESOURCE_ENERGY] < 200) {
+                    else if (factory.store[RESOURCE_ENERGY] < 200 && creep.room.storage[RESOURCE_UTRIUM] > 6000) {
                         creep.transfer(factory, RESOURCE_ENERGY);
                         creep.withdraw(creep.room.storage, RESOURCE_ENERGY);
                     }
-                    else if (factory.store[RESOURCE_UTRIUM] < 500) {
+                    else if (factory.store[RESOURCE_UTRIUM] < 500 && creep.room.storage[RESOURCE_UTRIUM] > 6000) {
                         creep.withdraw(creep.room.storage, RESOURCE_UTRIUM);
                     }
                     else {
@@ -6006,7 +6012,7 @@ const loop = errorMapper(() => {
                 Game.spawns['E35S47_1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE], "HarvestCreep_1", { memory: { role: "harvestCreep", sourceId: '5bbcaf069099fc012e639ff6', dontPullMe: true, homeRoom: 'E35S47' } });
             }
             else if (centerCreeps.length < 1) {
-                Game.spawns['E35S47_1'].spawnCreep([MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY], "CenterCreep_" + RandomName.createName(), { memory: { role: "centerCreep", dontPullMe: true, homeRoom: 'E35S47', position: [12, 18], working: true } });
+                Game.spawns['E35S47_1'].spawnCreep([MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY], "CenterCreep_" + RandomName.createName(), { memory: { role: "centerCreep", dontPullMe: true, homeRoom: 'E35S47', position: [12, 18], working: true } });
             }
             else if (upgraders.length < 1 && Game.rooms[room].controller.ticksToDowngrade < 64000) {
                 Game.spawns['E35S47_1'].spawnCreep(Body.createAverageBody(300), "Upgrader_" + RandomName.createName(), { memory: { role: "upgrader", homeRoom: 'E35S47' } });
@@ -6122,7 +6128,7 @@ const loop = errorMapper(() => {
                 Game.spawns['E39S47_2'].spawnCreep([WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE], "HarvestCreep_3", { memory: { role: "harvestCreep", sourceId: '5bbcaf4a9099fc012e63a6ee', dontPullMe: true, homeRoom: 'E39S47' } });
             }
             else if (centerCreeps.length < 1) {
-                Game.spawns['E39S47_2'].spawnCreep([MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY], "CenterCreep_" + RandomName.createName(), { memory: { role: "centerCreep", dontPullMe: true, homeRoom: 'E39S47', position: [21, 15] } });
+                Game.spawns['E39S47_2'].spawnCreep([MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY], "CenterCreep_" + RandomName.createName(), { memory: { role: "centerCreep", dontPullMe: true, homeRoom: 'E39S47', position: [21, 15] } });
                 // }else if(upgraders.length < 1){
                 //     Game.spawns['E39S47_2'].spawnCreep(bodyType.createAverageBody(1200),"Upgrader_"+randomName.createName(),
                 //     {memory: {role: "upgrader",homeRoom: 'E39S47'}});      
@@ -6183,6 +6189,7 @@ const loop = errorMapper(() => {
             let centerLink = Game.getObjectById('61e7d673c32f8f7570ad7e44');
             let sourceLink1 = Game.getObjectById('61e7dfc0363f39514da6ee51');
             let sourceLink2 = Game.getObjectById('61ed52620bd2bf7ca5dd404b');
+            let sourceLink3 = Game.getObjectById('621337af282098652c59f7b6');
             var mineral = Game.getObjectById('5bbcb647d867df5e542076b6');
             let upgraderAmount;
             if (Game.rooms[room].storage.store[RESOURCE_ENERGY] > 200000) {
@@ -6216,7 +6223,7 @@ const loop = errorMapper(() => {
                 Game.spawns['E37S48_1'].spawnCreep([WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE], "HarvestCreep_5", { memory: { role: "harvestCreep", sourceId: '5bbcaf269099fc012e63a3de', dontPullMe: true, homeRoom: 'E37S48' } });
             }
             else if (centerCreeps.length < 1) {
-                Game.spawns['E37S48_1'].spawnCreep([MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY], "CenterCreep_" + RandomName.createName(), { memory: { role: "centerCreep", dontPullMe: true, homeRoom: 'E37S48', position: [41, 36], working: true } });
+                Game.spawns['E37S48_1'].spawnCreep([MOVE, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY], "CenterCreep_" + RandomName.createName(), { memory: { role: "centerCreep", dontPullMe: true, homeRoom: 'E37S48', position: [41, 36], working: true } });
             }
             else if (upgraders.length < upgraderAmount) {
                 Game.spawns['E37S48_1'].spawnCreep(Body.createAverageBody(1800), "Upgrader_" + RandomName.createName(), { memory: { role: "upgrader", homeRoom: 'E37S48', sourceId: "5bbcaf269099fc012e63a3de" } });
@@ -6260,6 +6267,9 @@ const loop = errorMapper(() => {
             }
             if (sourceLink2.store.getUsedCapacity(RESOURCE_ENERGY) == 800) {
                 sourceLink2.transferEnergy(centerLink);
+            }
+            if (sourceLink3.store.getUsedCapacity(RESOURCE_ENERGY) == 800) {
+                sourceLink3.transferEnergy(centerLink);
             }
         }
     }

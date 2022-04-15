@@ -121,7 +121,7 @@ export const loop = errorMapper(() => {
             
 
             }else if(centerCreeps.length < 1){
-                Game.spawns['E35S47_1'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
+                Game.spawns['E35S47_1'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
                 {memory: {role: "centerCreep", dontPullMe: true,homeRoom: 'E35S47',position:[12,18], working: true}});        
             }else if(upgraders.length < 1 && Game.rooms[room].controller.ticksToDowngrade < 64000){
                 Game.spawns['E35S47_1'].spawnCreep(bodyType.createAverageBody(300),"Upgrader_"+randomName.createName(),
@@ -266,7 +266,7 @@ export const loop = errorMapper(() => {
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf4a9099fc012e63a6ee', dontPullMe: true,homeRoom: 'E39S47'}});
             
             }else if(centerCreeps.length < 1){
-                Game.spawns['E39S47_2'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
+                Game.spawns['E39S47_2'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
                 {memory: {role: "centerCreep", dontPullMe: true,homeRoom: 'E39S47',position:[21,15]}});     
             // }else if(upgraders.length < 1){
             //     Game.spawns['E39S47_2'].spawnCreep(bodyType.createAverageBody(1200),"Upgrader_"+randomName.createName(),
@@ -348,6 +348,7 @@ export const loop = errorMapper(() => {
             let centerLink = Game.getObjectById('61e7d673c32f8f7570ad7e44') as StructureLink;
             let sourceLink1 = Game.getObjectById('61e7dfc0363f39514da6ee51') as StructureLink;
             let sourceLink2 = Game.getObjectById('61ed52620bd2bf7ca5dd404b') as StructureLink;
+            let sourceLink3 = Game.getObjectById('621337af282098652c59f7b6') as StructureLink;
 
             var mineral= Game.getObjectById('5bbcb647d867df5e542076b6') as Mineral;
 
@@ -387,7 +388,7 @@ export const loop = errorMapper(() => {
                 {memory: {role:"harvestCreep", sourceId:'5bbcaf269099fc012e63a3de', dontPullMe: true,homeRoom: 'E37S48'}});
 
             }else if(centerCreeps.length < 1){
-                Game.spawns['E37S48_1'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
+                Game.spawns['E37S48_1'].spawnCreep([MOVE,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY,CARRY],"CenterCreep_"+randomName.createName(),
                 {memory: {role: "centerCreep", dontPullMe: true,homeRoom: 'E37S48',position:[41,36], working: true}});    
             }else if(upgraders.length < upgraderAmount){
                 Game.spawns['E37S48_1'].spawnCreep(bodyType.createAverageBody(1800),"Upgrader_"+randomName.createName(),
@@ -449,6 +450,9 @@ export const loop = errorMapper(() => {
             }
             if (sourceLink2.store.getUsedCapacity(RESOURCE_ENERGY) == 800){
                 sourceLink2.transferEnergy(centerLink);
+            }
+            if (sourceLink3.store.getUsedCapacity(RESOURCE_ENERGY) == 800){
+                sourceLink3.transferEnergy(centerLink);
             }
 
         }
